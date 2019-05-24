@@ -1,6 +1,9 @@
-STRUCTURE:
-==========
+Automated Cryptocurrency Algorithmic Trading
+============================================
 
+Poynor & Bradshaw, LLC.
+
+#### STRUCTURE
 ```
 --> README.MD
 --> TA
@@ -30,8 +33,7 @@ STRUCTURE:
 --> testbed? TBD...
 ```
 
-TRADING ROUTINE
-===============
+#### TRADING ROUTINE
 ```
 | master python script in home directory |
 
@@ -61,8 +63,7 @@ TRADING ROUTINE
 | recorded in logs dir |
 ```
 
-DATA COLLECTION ROUTINE
-=======================
+#### DATA COLLECTION ROUTINE
 
 ```
 | scraper.py in data subdir|
