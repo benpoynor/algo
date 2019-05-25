@@ -6,6 +6,8 @@ Poynor & Bradshaw, LLC.
 #### STRUCTURE
 ```
 --> README.MD
+--> common
+	|--> technicals.py
 --> TA
 	|--> algo1.py
 	|--> algo2.py
@@ -37,7 +39,7 @@ Poynor & Bradshaw, LLC.
 ```
 | master python script in home directory |
 
- | | |
+ | | | (imports, not calls)
  v v v 
 
 | algorithm script from one of the algo subdirs |
