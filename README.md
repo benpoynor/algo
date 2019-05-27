@@ -2,7 +2,7 @@ Automated Cryptocurrency Algorithmic Trading
 ========
 
 
-##TODO:
+## TODO:
 
 #### backtesting environment
 -get historical ETH data (1m over 7d preferably)
