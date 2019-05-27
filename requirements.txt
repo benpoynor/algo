@@ -1,3 +1,6 @@
 matplotlib
 pandas
 numpy
+mpl_finance
+pprint
+yahoo-finance
