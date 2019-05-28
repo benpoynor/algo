@@ -1,4 +1,11 @@
 import random
+from yahoofinancials import YahooFinancials
+
+
+def get_debug_pricehist(ticker, startdate, enddate):
+    yf = YahooFinancials(ticker)
+    hsp = yf.get_historical_price_data(startdate, enddate, 'daily')
+    return hsp[ticker]['prices']
 
 
 def fake_data(length):
