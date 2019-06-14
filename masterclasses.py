@@ -3,21 +3,37 @@ from datetime import datetime
 
 class Algorithm:
     positions = []
-    stop_loss = float  # -.02 (-2%)
+    stop_loss: float  # -.02 (-2%)
+    alpha: int
 
     def __init__(self):
+        alpha = 0
         print("Algorithm Superclass Instantiated...")
 
     def liquidate(self):
         for position in self.positions:
             position.close()
 
-    def check_stop(self, position):
-        if position.alpha < self.stop_loss:
-            position.close()
+    def update_alpha(self):
+        for position in self.positions:
+            self.alpha += position.alpha
 
-    def action(self):
+    def action(self, current, data):
         raise NotImplementedError
+
+
+class Backtest:
+    alpha: int
+    beta: int
+    delta: int
+    sharpe: int
+
+    def __init__(self, data, algorithm):
+        for point in data:
+            algorithm.action(current=point, data=data)
+
+        algorithm.update_alpha()
+        print('alpha: {}').format(algorithm.alpha)
 
 
 class Position:
