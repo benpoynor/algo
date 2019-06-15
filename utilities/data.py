@@ -7,11 +7,11 @@ def get_yahoo_pricehist(ticker, startdate, enddate):
     return hsp[ticker]['prices']
 
 
-def sma(period, dataset, index):
+def sma(period, dataset, current):
     ma = 0
     for i in range(period):
-        if index - i > 0:
-            ma += dataset[index - i]['close']
+        if current - i > 0:
+            ma += dataset[current - i]['close']
         else:
             return None
     return ma/period

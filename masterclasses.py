@@ -2,21 +2,23 @@ from datetime import datetime
 
 
 class Algorithm:
-    positions = []
-    stop_loss: float  # -.02 (-2%)
     alpha: int
 
     def __init__(self):
-        alpha = 0
-        print("Algorithm Superclass Instantiated...")
+        self.position = Position()
+        self.alpha = 0
 
     def liquidate(self):
-        for position in self.positions:
-            position.close()
+        self.position.close()
 
     def update_alpha(self):
-        for position in self.positions:
-            self.alpha += position.alpha
+        self.alpha += self.position.alpha
+
+    def buy(self):
+        self.position.open()
+
+    def sell(self):
+        self.position.close()
 
     def action(self, current, data):
         raise NotImplementedError
@@ -55,6 +57,7 @@ class Position:
         # buy self.size of self.currency if long
         # sell self.size of self.currency if short
         self.open_time = datetime.now()
+        print('position opened')
         self.is_open = True
         pass
 
@@ -63,11 +66,8 @@ class Position:
         # buy self.size of self.currency if short
         self.close_time = datetime.now()
         self.is_open = False
+        print('position closed')
         pass
 
-    def __init__(self, exposure, currency, size):
-        self.exposure = exposure
-        self.currency = currency
-        self.size = size
-
-        self.open()
+    def __init__(self):
+        pass
