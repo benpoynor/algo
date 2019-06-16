@@ -12,7 +12,8 @@ class Algorithm:
         self.position.close()
 
     def update_alpha(self):
-        self.alpha += self.position.alpha
+        # self.alpha += self.position.alpha
+        pass
 
     def buy(self):
         self.position.open()
@@ -20,7 +21,7 @@ class Algorithm:
     def sell(self):
         self.position.close()
 
-    def action(self, current, data):
+    def action(self, index, data):
         raise NotImplementedError
 
 
@@ -31,8 +32,8 @@ class Backtest:
     sharpe: int
 
     def __init__(self, data, algorithm):
-        for point in data:
-            algorithm.action(current=point, data=data)
+        for i in range(len(data)):
+            algorithm.action(i, data)
 
         algorithm.update_alpha()
         print('alpha: {}').format(algorithm.alpha)
@@ -70,4 +71,4 @@ class Position:
         pass
 
     def __init__(self):
-        pass
+        self.is_open = False
