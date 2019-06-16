@@ -1,25 +1,13 @@
-from datetime import datetime
-
 
 class Algorithm:
-    alpha: int
+    alpha: float
 
     def __init__(self):
         self.position = Position()
-        self.alpha = 0
-
-    def liquidate(self):
-        self.position.close()
+        self.alpha = 0.00
 
     def update_alpha(self):
-        # self.alpha += self.position.alpha
-        pass
-
-    def buy(self):
-        self.position.open()
-
-    def sell(self):
-        self.position.close()
+        self.alpha += self.position.alpha
 
     def action(self, index, data):
         raise NotImplementedError
@@ -34,41 +22,70 @@ class Backtest:
     def __init__(self, data, algorithm):
         for i in range(len(data)):
             algorithm.action(i, data)
-
-        algorithm.update_alpha()
-        print('alpha: {}').format(algorithm.alpha)
+        if algorithm.position.is_open:
+            algorithm.alpha -= algorithm.position.open_cost_basis
+        ret = 'alpha: {}'.format(algorithm.alpha)
+        print(ret)
 
 
 class Position:
-    exposure: str  # 'long', 'short'
-    currency: str  # 'BTC', 'ETH'
-    size: int
+    attributes = {}
     is_open: bool
+    alpha = 0
+    open_cost_basis: float
+    close_cost_basis: float
 
-    open_time: datetime
-    close_time: datetime
+    def open(self, order_size,
+             currency, current_price,
+             current_time):
+        # later i need to add open_limit, open_market, open_large, open_small, etc...
+        # for now though, this is OK, no reason to abstract so far into future yet...
+        self.alpha = 0
+        self.attributes.update({
+            'size': order_size,
+            'currency': currency,
+            'open_price': float(current_price),
+            'open_time': current_time
+        })
+        # buy self.size of self.currency
+        try:
+            now = self.attributes['open_time'].strftime("%m/%d/%Y, %H:%M:%S")
+        except AttributeError:
+            now = self.attributes['open_time']
+        self.open_cost_basis = self.attributes['size'] * self.attributes['open_price']
 
-    open_price: int
-    close_price: int
-    current_price: int
-
-    alpha: int
-
-    def open(self):
-        # buy self.size of self.currency if long
-        # sell self.size of self.currency if short
-        self.open_time = datetime.now()
-        print('position opened')
+        ret = 'position opened with {} {} at {} ({}) on {}'.format(self.attributes['size'],
+                                                                   self.attributes['currency'],
+                                                                   self.attributes['open_price'],
+                                                                   self.open_cost_basis,
+                                                                   now)
+        print(ret)
         self.is_open = True
-        pass
 
-    def close(self):
-        # sell self.size of self.currency if long
-        # buy self.size of self.currency if short
-        self.close_time = datetime.now()
+    def close(self, current_price, current_time):
+        # sell self.size of self.currency
+
+        self.attributes.update({
+            'close_price': float(current_price),
+            'close_time': current_time,
+        })
+        try:
+            now = self.attributes['close_time'].strftime("%m/%d/%Y, %H:%M:%S")
+        except AttributeError:
+            now = self.attributes['close_time']
+        self.close_cost_basis = self.attributes['size'] * self.attributes['close_price']
+
+        ret = 'position closed with {} {} at {} ({}) on {}'.format(self.attributes['size'],
+                                                                   self.attributes['currency'],
+                                                                   self.attributes['close_price'],
+                                                                   self.close_cost_basis,
+                                                                   now)
+
+        print(ret, end=' ')
+        self.alpha = self.close_cost_basis - self.open_cost_basis
+        ret2 = 'for a return of {}'.format(self.alpha)
+        print(ret2)
         self.is_open = False
-        print('position closed')
-        pass
 
     def __init__(self):
         self.is_open = False
