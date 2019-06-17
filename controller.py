@@ -1,8 +1,17 @@
 from algos import sma_algo
 from masterclasses import Backtest
-from utilities import data
+from utilities.filehandler import FileHandler
+
+
+def run_backtest():
+    a = sma_algo.MovingAverageAlgo()
+    d = FileHandler.read_from_file('data/testfile.csv')
+    b = Backtest(d, a)
+
+
+def create_data():
+    pass
+
 
 if __name__ == "__main__":
-    a = sma_algo.MovingAverageAlgo()
-    d = data.x = data.read_from_file('data/testfile.csv')
-    b = Backtest(d, a)
+    run_backtest()
