@@ -8,6 +8,7 @@ class Algorithm:
 
     def update_alpha(self):
         self.alpha += self.position.alpha
+        self.position.alpha = 0
 
     def action(self, index, data):
         raise NotImplementedError
@@ -22,8 +23,10 @@ class Backtest:
     def __init__(self, data, algorithm):
         for i in range(len(data)):
             algorithm.action(i, data)
-        if algorithm.position.is_open:
-            algorithm.alpha -= algorithm.position.open_cost_basis
+        # TODO: fix bug: position left open at end of backtest
+        # the last iteration of the backtest could leave a position open...
+        # resulting in an unaccounted for net loss were the position exited...
+        # at end of the backtest
         ret = 'alpha: {}'.format(algorithm.alpha)
         print(ret)
 
@@ -38,6 +41,7 @@ class Position:
     def open(self, order_size,
              currency, current_price,
              current_time):
+        # TODO: add different order types to position open and position close
         # later i need to add open_limit, open_market, open_large, open_small, etc...
         # for now though, this is OK, no reason to abstract so far into future yet...
         self.alpha = 0
@@ -64,6 +68,7 @@ class Position:
 
     def close(self, current_price, current_time):
         # sell self.size of self.currency
+        # TODO: INTEGRATE API... ASAP!
 
         self.attributes.update({
             'close_price': float(current_price),

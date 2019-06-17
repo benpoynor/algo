@@ -2,6 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_finance import candlestick2_ochl
 
+# TODO: show SMAs as well as where positions are being bought and sold
+
 
 def graph(ds):
     dataset = pd.DataFrame(data=ds)
