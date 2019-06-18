@@ -23,7 +23,7 @@ class Algorithm:
     def reset_alpha(self):
         self.position.alpha = 0
 
-    def action(self, index, data):
+    def action(self, index, data, currency):
         raise NotImplementedError
 
 
@@ -33,9 +33,9 @@ class Backtest:
     delta: int
     sharpe: int
 
-    def __init__(self, data, algorithm):
+    def __init__(self, data, algorithm, currency):
         for i in range(len(data)):
-            algorithm.action(i, data)
+            algorithm.action(i, data, currency)
         # TODO: fix bug: position left open at end of backtest
         # the last iteration of the backtest could leave a position open...
         # resulting in an unaccounted for net loss were the position exited...
