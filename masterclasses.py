@@ -1,13 +1,26 @@
 
 class Algorithm:
     alpha: float
+    capital: float  # in USD
+    initial_capital: float
+    position_sizing: float  # as a percentage of total capital
+    safety_margin: int  # in USD
 
     def __init__(self):
         self.position = Position()
         self.alpha = 0.00
+        self.initial_capital = self.capital
+
+    def get_buy_amount(self, asset_price):
+        return (self.position_sizing * (self.capital / asset_price)) - (self.safety_margin / asset_price)
 
     def update_alpha(self):
         self.alpha += self.position.alpha
+
+    def update_capital(self):
+        self.capital += self.position.alpha
+
+    def reset_alpha(self):
         self.position.alpha = 0
 
     def action(self, index, data):
@@ -27,7 +40,10 @@ class Backtest:
         # the last iteration of the backtest could leave a position open...
         # resulting in an unaccounted for net loss were the position exited...
         # at end of the backtest
-        ret = 'alpha: {}'.format(algorithm.alpha)
+        returnpercent = round((algorithm.alpha / algorithm.initial_capital) * 100, 2)
+        ret = 'alpha: {} ({}% return on initial capital of {}USD)'.format(algorithm.alpha,
+                                                                          returnpercent,
+                                                                          algorithm.initial_capital)
         print(ret)
 
 
