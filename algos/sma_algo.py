@@ -12,11 +12,11 @@ class MovingAverageAlgo(Algorithm):
     # TODO: add runtime type param that alters the action if backtesting or on live etc..
     # need a seperate action for backtesting and a seperate action for live testing and a seperate action for real life
     # or take in a runtime type paramater that 'backtesting' 'live testing' 'live'
-    def action(self, index, data):
+    def action(self, index, data, currency):
         if Technicals.sma(20, data, index) < Technicals.sma(50, data, index):
             if not self.position.is_open:
                 self.position.open(self.get_buy_amount(float(data[index].get('close'))),
-                                   'BTC-USD',
+                                   currency,
                                    data[index].get('close'),
                                    data[index].get('formatted_date'))
 
