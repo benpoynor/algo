@@ -29,39 +29,40 @@ class Algorithm:
 
 
 class Backtest:
-    results = {}
 
-    def __init__(self, data, algorithm, currency):
+    def __init__(self, data, algorithm, currency, verbose=False):
         for i in range(len(data)):
             algorithm.action(i, data, currency)
         # TODO: fix bug: position left open at end of backtest
-
+        self.results = {}
         returnpercent = round((algorithm.returns / algorithm.initial_capital) * 100, 2)
-        ret = 'returns: {} ({}% return on initial capital of {}USD)'.format(algorithm.returns,
-                                                                            returnpercent,
-                                                                            algorithm.initial_capital)
-        print(ret)
+        if verbose:
+            ret = 'returns: {} ({}% return on initial capital of {}USD)'.format(algorithm.returns,
+                                                                                returnpercent,
+                                                                                algorithm.initial_capital)
+            print(ret)
+
         self.results.update({'returns': algorithm.returns,
                              'returnpercent': returnpercent})
 
-    def get_results(self):
+    def return_results(self):
         return self.results
 
 
 class BacktestController:
     universe = []
-    data_path: str
 
-    def __init__(self, universe, algorithm, data_path):
+    def __init__(self, universe, algorithm):
         self.universe = universe
         self.algorithm = algorithm
-        self.data_path = data_path
 
     def full_backest(self, verbose=False):
         results_dict = {}
         for currency in self.universe:
             d = FileHandler.read_from_file(FileHandler.get_filestring(currency))
-            b = Backtest(d, self.algorithm, currency)
+            b = Backtest(d, self.algorithm, currency, verbose=verbose)
+            results_dict.update({currency: b.return_results()})
+        print(results_dict)
 
 
 class Position:
