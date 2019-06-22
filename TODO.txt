@@ -1,0 +1,24 @@
+1.  get rid of the algorithm 'self.position.open'
+    and replace it with something that makes more sense like self.buy(),
+    where self.buy() is an abstract method in the master class and actually
+    implemented with algo, maybe it'd open a limit order or something
+
+2.  gut the position class. all it should do is say whether or not it's open,
+    how much it was opened for, and how much it was closed for.
+
+3.  add transaction_interface class that manages setting limit orders and interfaces
+    with api controllers.
+
+4.  add a risk_model class that manages quantity being bought and sold:
+    rn: algorithm = everything. i want:
+    ALGORITHM CLASS = WHEN
+    RISK MODEL CLASS = HOW MUCH
+    TRANSACTION CLASS = HOW ORDER IS PLACED
+
+5.  clean up backtesting static/non static vars
+
+6.  add drawdowns, drawdown length, and sharpe ratio to backtesting
+
+7.  implement better graphing
+
+8. add web server
