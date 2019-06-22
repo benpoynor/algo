@@ -1,4 +1,5 @@
 from utilities.filehandler import FileHandler
+from pprint import pprint
 
 
 class Algorithm:
@@ -62,7 +63,7 @@ class BacktestController:
             d = FileHandler.read_from_file(FileHandler.get_filestring(currency))
             b = Backtest(d, self.algorithm, currency, verbose=verbose)
             results_dict.update({currency: b.return_results()})
-        print(results_dict)
+        pprint(results_dict)
 
 
 class Position:
@@ -97,7 +98,7 @@ class Position:
                                                                    self.attributes['open_price'],
                                                                    self.open_cost_basis,
                                                                    now)
-        print(ret)
+        # print(ret)
         self.is_open = True
 
     def close(self, current_price, current_time):
@@ -120,10 +121,10 @@ class Position:
                                                                    self.close_cost_basis,
                                                                    now)
 
-        print(ret, end=' ')
+        # print(ret, end=' ')
         self.returns = self.close_cost_basis - self.open_cost_basis
         ret2 = 'for a return of {}'.format(self.returns)
-        print(ret2)
+        # print(ret2)
         self.is_open = False
 
     def __init__(self):

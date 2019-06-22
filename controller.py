@@ -6,7 +6,7 @@ from settings import BACKTEST_CURRENCIES as BC
 def run_all_backtests():
     a = MovingAverageAlgo()
     b = BacktestController(BC, a)
-    b.full_backest(verbose=True)
+    b.full_backest(verbose=False)
 
 
 if __name__ == "__main__":
