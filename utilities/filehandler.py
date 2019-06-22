@@ -25,6 +25,11 @@ class FileHandler:
     def pandas_read_from_file(path):
         return pd.read_csv(path)
 
+    @staticmethod
+    def get_filestring(currency_str):
+        return 'data/{}_daily'.format(currency_str.replace('-', '_'))
+
+
 
 # d = get_yahoo_pricehist('BTC-USD', '2018-01-01', '2019-01-01')
 # write_to_file('data/testfile.csv', d)

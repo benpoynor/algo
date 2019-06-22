@@ -25,6 +25,6 @@ class MovingAverageAlgo(Algorithm):
                 self.position.close(data[index].get('close'),
                                     data[index].get('formatted_date'))
 
-        self.update_alpha()
+        self.update_returns()
         self.update_capital()
-        self.reset_alpha()
+        self.reset_returns()
