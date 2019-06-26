@@ -1,30 +1,22 @@
-from masterclasses import Algorithm
+from masterclasses import Algorithm, RiskModel
 from utilities.technicals import Technicals
 
 
 class MovingAverageAlgo(Algorithm):
     def __init__(self):
-        self.capital = 15000
-        self.position_sizing = 1
-        self.safety_margin = 100
-        super().__init__()
+        super().__init__(RiskModel())
+        self.position_open = False
 
-    # TODO: add runtime type param that alters the action if backtesting or on live etc..
-    # need a seperate action for backtesting and a seperate action for live testing and a seperate action for real life
-    # or take in a runtime type paramater that 'backtesting' 'live testing' 'live'
-    def action(self, index, data, currency):
+    def backtest_action(self, index, data, currency):
         if Technicals.sma(20, data, index) < Technicals.sma(50, data, index):
-            if not self.position.is_open:
-                self.position.open(self.get_buy_amount(float(data[index].get('close'))),
-                                   currency,
-                                   data[index].get('close'),
-                                   data[index].get('formatted_date'))
+            if not self.position_open:
+                return 'buy'
 
         elif Technicals.sma(20, data, index) > Technicals.sma(50, data, index):
-            if self.position.is_open:
-                self.position.close(data[index].get('close'),
-                                    data[index].get('formatted_date'))
+            if self.position_open:
+                return 'sell'
+        else:
+            return 'pass'
 
-        self.update_returns()
-        self.update_capital()
-        self.reset_returns()
+    def action(self, index, data, currency):
+        pass
