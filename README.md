@@ -1,19 +1,24 @@
 Algorithmic Cryptocurrency Trading
 ========
-### Structure and Design Philosophy:
-main controller  
-V  
-backtest/live instantiates algorithm  
-V  
-backtest/live loops through algorithm action  
-V  
-algorithm action actually happens  
-V  
-opens and closes positions based on logic  
-V  
-positions interact with API
+## Structure and Design Philosophy:
+  
+#### account: 
+* holds account details (balance, keys, etc...)  
 
-#### futures plans
+#### risk model: 
+* decides how much to buy (manages risk)  
+
+#### execution model: 
+* buys  
+#### algorithm: 
+* tells when to buy  
+#### backtest: 
+* shows what would happen if the algorithm ran  
+
+#### live: 
+* actually runs the algorithm in real time  
+
+#### future plans
 - multithreading algorithm instances, multiple live algos trading at once
 - website where I can monitor trades and trade history
 - running on AWS near binance exchange servers

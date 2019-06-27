@@ -3,29 +3,35 @@ from pprint import pprint
 
 
 class Account:
-    def __init__(self, risk_model):
-        self.equity = 10000
+    def __init__(self):
+        self.initial_capital = 1000
+        self.equity = self.initial_capital
+
+    def update_equity(self, amount):
+        self.equity += amount
+
+    def reset_equity(self):
+        self.equity = self.initial_capital
 
 
 class RiskModel:
-    def __init__(self):
-        self.initial_capital = 1000
+    def __init__(self, account):
         self.position_sizing = 1
         self.safety_margin = 100
+        self.account = account
 
     def get_position_size(self, asset_price):
-        return (self.position_sizing * (self.equity / asset_price)) - \
-               (self.safety_margin / asset_price)
+        return (self.position_sizing * (self.account.equity / asset_price)) - \
+(self.safety_margin / asset_price)
 
 
 class ExecutionModel:
     def __init__(self, account):
-        self.position_open = False
-        self.risk_model = RiskModel()
+        self.account = account
+        self.risk_model = RiskModel(account)
         # backtesting vars
         self.open_equity = 0
         self.open_amount = 0
-
 
     @staticmethod
     def limit_buy(price, currency, time_limit):
@@ -36,51 +42,39 @@ class ExecutionModel:
         pass
 
     def backtest_buy(self, price):
-        if not self.position_open:
-            self.open_amount = self.risk_model.get_position_size(price)
-            self.open_equity = price * self.open_amount
+        self.open_amount = self.risk_model.get_position_size(price)
+        self.open_equity = price * self.open_amount
 
     def backtest_sell(self, price):
-        if self.position_open:
-            price_delta = (price * self.open_amount) - self.open_equity
-            self.risk_model.update_equity(price_delta)
+        price_delta = (price * self.open_amount) - self.open_equity
+        self.account.update_equity(price_delta)
 
 
 class Algorithm:
-    def __init__(self, execution_model):
-        self.execution_model = execution_model
-
-    def backtest_action(self, index, data, currency):
+    def backtest_action(self, index, data):
         raise NotImplementedError
 
-    def action(self, index, data, currency):
+    def action(self):
         raise NotImplementedError
 
 
 class BacktestModel:
 
-    def __init__(self, universe, algorithm):
-        self.universe = universe
+    def __init__(self, algorithm, account):
         self.algorithm = algorithm
+        self.account = account
 
-    @staticmethod
-    def backtest(data, algorithm, currency):
-        equity = algorithm.risk_model.initial_capital
+    def backtest(self, currency):
+        data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
+        print(self.account.equity)
         for i in range(len(data)):
-            signal = algorithm.backtest_action(i, data, currency)
-            if signal == 'buy':
-                # fake buy
-                pass
-            elif signal == 'sell':
-                # fake sell
-                pass
+            self.algorithm.backtest_action(i, data)
+        print(self.account.equity)
+        self.account.reset_equity()
 
-        return equity
-
-    def full_backest(self):
+    def full_backest(self, universe):
         results_dict = {}
-        for currency in self.universe:
-            d = FileHandler.read_from_file(FileHandler.get_filestring(currency))
-            b = self.backtest(d, self.algorithm, currency)
-            results_dict.update({currency: b})
+        for currency in universe:
+            self.backtest(currency)
+            results_dict.update({currency: self.account.equity})
         pprint(results_dict)
