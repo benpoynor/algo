@@ -24,3 +24,5 @@ class Technicals:
             dy = series[i] - series[i - 1]
             dxdys.append(dy/2)
         return pd.Series(dxdys)
+
+    # TODO: Make sure the datasets remain lined up after calculating dydx
