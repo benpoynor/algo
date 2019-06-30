@@ -1,4 +1,5 @@
 from utilities.filehandler import FileHandler
+from utilities.graphing import GraphHandler
 from pprint import pprint
 
 
@@ -22,7 +23,7 @@ class RiskModel:
 
     def get_position_size(self, asset_price):
         return (self.position_sizing * (self.account.equity / asset_price)) - \
-(self.safety_margin / asset_price)
+               (self.safety_margin / asset_price)
 
 
 class ExecutionModel:
@@ -71,6 +72,11 @@ class BacktestModel:
             self.algorithm.backtest_action(i, data)
         print(self.account.equity)
         self.account.reset_equity()
+
+    @staticmethod
+    def interactive_backtest(currency):
+        data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
+        GraphHandler.full_graph(data)
 
     def full_backest(self, universe):
         results_dict = {}

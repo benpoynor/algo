@@ -9,4 +9,4 @@ if __name__ == "__main__":
     algorithm = MovingAverageAlgo(execution_model, risk_model)
     backtest_model = BacktestModel(algorithm, account)
 
-    backtest_model.backtest('BTC-USD')
+    backtest_model.interactive_backtest('ETH-USD')
