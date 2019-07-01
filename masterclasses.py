@@ -42,17 +42,29 @@ class ExecutionModel:
     def limit_sell(price, currency, time_limit):
         pass
 
-    def backtest_buy(self, price):
+    def backtest_buy(self, price, index, hist_array):
+        info = {}
         self.open_amount = self.risk_model.get_position_size(price)
         self.open_equity = price * self.open_amount
+        info.update({'open_amount': self.open_amount,
+                     'open_price': price,
+                     'open_equity': self.open_equity,
+                     'open_index': index})
+        hist_array.append(info)
 
-    def backtest_sell(self, price):
-        price_delta = (price * self.open_amount) - self.open_equity
-        self.account.update_equity(price_delta)
+    def backtest_sell(self, price, index, hist_array):
+        info = {}
+        info.update({'close_amount': self.open_amount,
+                     'close_equity': price * self.open_amount,
+                     'close_price': price,
+                     'price_delta': (price * self.open_amount) - self.open_equity,
+                     'close_index': index})
+        self.account.update_equity(info.get('price_delta'))
+        hist_array.append(info)
 
 
 class Algorithm:
-    def backtest_action(self, index, data):
+    def backtest_action(self, index, data, hist_array):
         raise NotImplementedError
 
     def action(self):
@@ -73,10 +85,14 @@ class BacktestModel:
         print(self.account.equity)
         self.account.reset_equity()
 
-    @staticmethod
-    def interactive_backtest(currency):
+    def interactive_backtest(self, currency):
         data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
-        moving_average_full_graph(data, 10, 20)
+        hist_array = []
+        for i in range(len(data)):
+            self.algorithm.backtest_action(i, data, hist_array)
+
+        x = hist_array
+        moving_average_full_graph(data, 10, 20, hist_array)
 
     def full_backest(self, universe):
         results_dict = {}

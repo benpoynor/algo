@@ -14,7 +14,7 @@ def add_titlebox(ax, text):
     return ax
 
 
-def moving_average_full_graph(data, short_period, long_period):
+def moving_average_full_graph(data, short_period, long_period, hist_array):
     # setup window
     plt.subplots_adjust(left=.03, bottom=.03, right=0.99, top=0.99, wspace=0.05, hspace=0.15)
     dataset = pd.DataFrame(data=data)
@@ -40,6 +40,11 @@ def moving_average_full_graph(data, short_period, long_period):
     candlestick2_ochl(ax=ax1, opens=dataset['open'], closes=dataset['close'],
                       highs=dataset['high'], lows=dataset['low'],
                       width=1, alpha=1, colorup='green', colordown='red', )
+    for i in hist_array:
+        if i.get('open_index'):
+            ax1.plot(i.get('open_index'), i.get('open_price'), '^', 'green', markersize=25)
+        if i.get('close_index'):
+            ax1.plot(i.get('close_index'), i.get('close_price'), 'v', 'red', markersize=25)
     sma_short.plot(ax=ax1, color='blue')
     sma_long.plot(ax=ax1, color='red')
     ax1.set_xlabel('Date')
