@@ -1,5 +1,5 @@
 from utilities.filehandler import FileHandler
-from utilities.graphing import full_graph
+from utilities.graphing import *
 from pprint import pprint
 
 
@@ -76,7 +76,7 @@ class BacktestModel:
     @staticmethod
     def interactive_backtest(currency):
         data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
-        full_graph(data)
+        moving_average_full_graph(data, 10, 20)
 
     def full_backest(self, universe):
         results_dict = {}
