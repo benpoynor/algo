@@ -16,9 +16,9 @@ def add_titlebox(ax, text):
 
 def moving_average_full_graph(data, short_period, long_period, backtest_data):
     # setup window
-    plt.subplots_adjust(left=.03, bottom=.03, right=0.99, top=0.99, wspace=0.05, hspace=0.15)
+    plt.subplots_adjust(left=.04, bottom=.03, right=0.99, top=0.99, wspace=0.05, hspace=0.15)
     dataset = pd.DataFrame(data=data)
-    x = np.arange(len(dataset))
+    x_range = np.arange(len(dataset))
     gridsize = (8, 2)
 
     # declare axes
@@ -44,29 +44,28 @@ def moving_average_full_graph(data, short_period, long_period, backtest_data):
     sma_short.plot(ax=ax1, color='blue')
     sma_long.plot(ax=ax1, color='red')
     ax1.set_xlabel('Date')
-    ax1.set_ylabel('Price')
+    ax1.set_ylabel('Price', fontsize=20)
 
     for idx, val in enumerate(backtest_data):
         if val['action'] == 'buy':
             ax1.plot(idx, float(dataset.at[idx, 'close']), '^', color='black', markersize=10)
         elif val['action'] == 'sell':
-            x = dataset.at[idx, 'close']
             ax1.plot(idx, float(dataset.at[idx, 'close']), 'v', color='black', markersize=10)
 
     # second box
     dydxshort.plot(ax=ax2, color='blue')
     dydxlong.plot(ax=ax2, color='red')
-    ax2.set_ylabel('Dy/Dx of SMA(s)')
+    ax2.set_ylabel(r'$\frac{dy}{dx} \mu$', fontsize=15)
 
     # third box
     sma_delta.plot(ax=ax3, color='purple')
-    ax3.set_ylabel('SMA delta')
-    ax3.fill_between(x, sma_delta, 0, where=sma_delta >= 0, facecolor='green', interpolate=True, alpha=.5)
-    ax3.fill_between(x, sma_delta, 0, where=sma_delta <= 0, facecolor='red', interpolate=True, alpha=.5)
+    ax3.set_ylabel(r'$\mu \Delta$', fontsize=15)
+    ax3.fill_between(x_range, sma_delta, 0, where=sma_delta >= 0, facecolor='green', interpolate=True, alpha=.5)
+    ax3.fill_between(x_range, sma_delta, 0, where=sma_delta <= 0, facecolor='red', interpolate=True, alpha=.5)
 
     # fourth box
     sma_delta_dydx.plot(ax=ax4)
-    ax4.set_ylabel('Dy/Dx of SMA(s)')
+    ax4.set_ylabel(r'$\frac{dy}{dx}[(\mu) \Delta$]', fontsize=15)
 
     # fifth box
     sma_delta_dydx2.plot(ax=ax5)
