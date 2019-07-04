@@ -1,6 +1,8 @@
 from algos.sma_algo import MovingAverageAlgo
 from masterclasses import RiskModel, ExecutionModel, Account, BacktestModel
 from settings import BACKTEST_CURRENCIES as BC
+from pprint import pprint
+
 
 if __name__ == "__main__":
     account = Account()
@@ -12,4 +14,4 @@ if __name__ == "__main__":
                                    execution_model=execution_model,
                                    risk_model=risk_model)
 
-    backtest_model.generate_backtest('ETH-USD')
+    backtest_model.execute_backtest('ETH-USD')

@@ -42,6 +42,16 @@ class ExecutionModel:
     def limit_sell(price, currency, time_limit):
         pass
 
+    @staticmethod
+    def backtest_buy(signal):
+        signal.update({'quantity': 100})
+        # arbitrary for now
+
+    @staticmethod
+    def backtest_sell(signal):
+        signal.update({'quantity': 100})
+        # arbitrary for now
+
 
 class Algorithm:
     # index here just means date
@@ -72,27 +82,34 @@ class BacktestModel:
             signal = self.algorithm.backtest_action(short_sma=sma20,
                                                     long_sma=sma50)
             if signal['action'] == 'buy':
-                print('buy signal recieved')
+                self.execution_model.backtest_buy(signal)
             elif signal['action'] == 'sell':
-                print('sell signal recieved')
+                self.execution_model.backtest_sell(signal)
             else:
-                print('passing!')
+                signal.update({'quantity': 0})
 
             backtest_data.append(signal)
 
+        for idx, val in enumerate(backtest_data):
+            if val['action'] == 'buy':
+                print('bought at {}'.format(data.at[idx, 'close']))
+            elif val['action'] == 'sell':
+                print('sold at {}'.format(data.at[idx, 'close']))
+
         return backtest_data
 
-    def interactive_backtest(self, currency):
+    def execute_backtest(self, currency):
         data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
-        backtest_array = []
-        for i in range(len(data)):
-            self.algorithm.backtest_action(i, data, backtest_array)
+        backtest_data = self.generate_backtest(currency)
 
-        moving_average_full_graph(data, 10, 20, backtest_array)
+        moving_average_full_graph(data=data,
+                                  short_period=20,
+                                  long_period=50,
+                                  backtest_data=backtest_data)
 
     def full_backest(self, universe):
         results_dict = {}
         for currency in universe:
-            self.interactive_backtest(currency)
+            self.execute_backtest(currency)
             results_dict.update({currency: self.account.equity})
         pprint(results_dict)

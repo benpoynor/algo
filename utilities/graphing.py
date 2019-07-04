@@ -14,7 +14,7 @@ def add_titlebox(ax, text):
     return ax
 
 
-def moving_average_full_graph(data, short_period, long_period, hist_array):
+def moving_average_full_graph(data, short_period, long_period, backtest_data):
     # setup window
     plt.subplots_adjust(left=.03, bottom=.03, right=0.99, top=0.99, wspace=0.05, hspace=0.15)
     dataset = pd.DataFrame(data=data)
@@ -46,11 +46,12 @@ def moving_average_full_graph(data, short_period, long_period, hist_array):
     ax1.set_xlabel('Date')
     ax1.set_ylabel('Price')
 
-    for i in hist_array:
-        if i.get('open_index'):
-            ax1.plot(i.get('open_index'), i.get('open_price'), '^', color='black', markersize=10)
-        if i.get('close_index'):
-            ax1.plot(i.get('close_index'), i.get('close_price'), 'v', color='black', markersize=10)
+    for idx, val in enumerate(backtest_data):
+        if val['action'] == 'buy':
+            ax1.plot(idx, float(dataset.at[idx, 'close']), '^', color='black', markersize=10)
+        elif val['action'] == 'sell':
+            x = dataset.at[idx, 'close']
+            ax1.plot(idx, float(dataset.at[idx, 'close']), 'v', color='black', markersize=10)
 
     # second box
     dydxshort.plot(ax=ax2, color='blue')
