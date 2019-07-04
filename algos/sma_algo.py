@@ -27,6 +27,9 @@ class MovingAverageAlgo(Algorithm):
             else:
                 return {'action': 'pass',
                         'signal_str': 1}
+        else:
+            return {'action': 'pass',
+                    'signal_str': 1}
 
     def action(self):
         pass
