@@ -42,29 +42,16 @@ class ExecutionModel:
     def limit_sell(price, currency, time_limit):
         pass
 
-    def backtest_buy(self, price, index, hist_array):
-        info = {}
-        self.open_amount = self.risk_model.get_position_size(price)
-        self.open_equity = price * self.open_amount
-        info.update({'open_amount': self.open_amount,
-                     'open_price': price,
-                     'open_equity': self.open_equity,
-                     'open_index': index})
-        hist_array.append(info)
+    def backtest_buy(self, price, index):
+        pass
 
-    def backtest_sell(self, price, index, hist_array):
-        info = {}
-        info.update({'close_amount': self.open_amount,
-                     'close_equity': price * self.open_amount,
-                     'close_price': price,
-                     'price_delta': (price * self.open_amount) - self.open_equity,
-                     'close_index': index})
-        self.account.update_equity(info.get('price_delta'))
-        hist_array.append(info)
+    def backtest_sell(self, price, index):
+        pass
 
 
 class Algorithm:
-    def backtest_action(self, index, data, hist_array):
+    # index here just means date
+    def backtest_action(self, data, index):
         raise NotImplementedError
 
     def action(self):
@@ -73,30 +60,45 @@ class Algorithm:
 
 class BacktestModel:
 
-    def __init__(self, algorithm, account):
+    def __init__(self, algorithm, account, execution_model, risk_model):
         self.algorithm = algorithm
         self.account = account
+        self.execution_model = execution_model
+        self.risk_model = risk_model
 
-    def backtest(self, currency):
-        data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
-        print(self.account.equity)
+    def generate_backtest(self, currency):
+        data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(currency)))
+
         for i in range(len(data)):
-            self.algorithm.backtest_action(i, data)
-        print(self.account.equity)
-        self.account.reset_equity()
+            sma20_series = Technicals.pandas_sma(20, data)
+            sma50_series = Technicals.pandas_sma(50, data)
+            sma20 = float(sma20_series[i])
+            sma50 = float(sma50_series[i])
+            signal = self.algorithm.backtest_action(short_sma=sma20,
+                                                    long_sma=sma50)
+            try:
+                if signal['action'] == 'buy':
+                    print('buy signal recieved')
+                    pass
+                elif signal['action'] == 'sell':
+                    print('sell signal recieved')
+                    pass
+                else:
+                    print('passing!')
+            except TypeError:
+                print(i)
 
     def interactive_backtest(self, currency):
         data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
-        hist_array = []
+        backtest_array = []
         for i in range(len(data)):
-            self.algorithm.backtest_action(i, data, hist_array)
+            self.algorithm.backtest_action(i, data, backtest_array)
 
-        x = hist_array
-        moving_average_full_graph(data, 10, 20, hist_array)
+        moving_average_full_graph(data, 10, 20, backtest_array)
 
     def full_backest(self, universe):
         results_dict = {}
         for currency in universe:
-            self.backtest(currency)
+            self.interactive_backtest(currency)
             results_dict.update({currency: self.account.equity})
         pprint(results_dict)

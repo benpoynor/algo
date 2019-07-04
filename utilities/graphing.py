@@ -40,28 +40,34 @@ def moving_average_full_graph(data, short_period, long_period, hist_array):
     candlestick2_ochl(ax=ax1, opens=dataset['open'], closes=dataset['close'],
                       highs=dataset['high'], lows=dataset['low'],
                       width=1, alpha=1, colorup='green', colordown='red', )
-    for i in hist_array:
-        if i.get('open_index'):
-            ax1.plot(i.get('open_index'), i.get('open_price'), '^', 'green', markersize=25)
-        if i.get('close_index'):
-            ax1.plot(i.get('close_index'), i.get('close_price'), 'v', 'red', markersize=25)
+
     sma_short.plot(ax=ax1, color='blue')
     sma_long.plot(ax=ax1, color='red')
     ax1.set_xlabel('Date')
     ax1.set_ylabel('Price')
 
+    for i in hist_array:
+        if i.get('open_index'):
+            ax1.plot(i.get('open_index'), i.get('open_price'), '^', color='black', markersize=10)
+        if i.get('close_index'):
+            ax1.plot(i.get('close_index'), i.get('close_price'), 'v', color='black', markersize=10)
+
+    # second box
     dydxshort.plot(ax=ax2, color='blue')
     dydxlong.plot(ax=ax2, color='red')
     ax2.set_ylabel('Dy/Dx of SMA(s)')
 
+    # third box
     sma_delta.plot(ax=ax3, color='purple')
     ax3.set_ylabel('SMA delta')
     ax3.fill_between(x, sma_delta, 0, where=sma_delta >= 0, facecolor='green', interpolate=True, alpha=.5)
     ax3.fill_between(x, sma_delta, 0, where=sma_delta <= 0, facecolor='red', interpolate=True, alpha=.5)
 
+    # fourth box
     sma_delta_dydx.plot(ax=ax4)
     ax4.set_ylabel('Dy/Dx of SMA(s)')
 
+    # fifth box
     sma_delta_dydx2.plot(ax=ax5)
     ax5.set_ylabel('Dy/Dx of SMA Delta')
     ax5.set_xlabel('date')

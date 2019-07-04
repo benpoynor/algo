@@ -6,7 +6,10 @@ if __name__ == "__main__":
     account = Account()
     risk_model = RiskModel(account)
     execution_model = ExecutionModel(account)
-    algorithm = MovingAverageAlgo(execution_model, risk_model)
-    backtest_model = BacktestModel(algorithm, account)
+    algorithm = MovingAverageAlgo()
+    backtest_model = BacktestModel(algorithm=algorithm,
+                                   account=account,
+                                   execution_model=execution_model,
+                                   risk_model=risk_model)
 
-    backtest_model.interactive_backtest('ETH-USD')
+    backtest_model.generate_backtest('ETH-USD')

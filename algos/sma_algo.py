@@ -1,23 +1,32 @@
 from masterclasses import Algorithm
-from utilities.technicals import Technicals
 
 
 class MovingAverageAlgo(Algorithm):
-    def __init__(self, execution_model, risk_model):
-        self.execution_model = execution_model
-        self.risk_model = risk_model
+    def __init__(self):
         self.position_open = False
 
-    def backtest_action(self, index, data, hist_array):
-        if Technicals.sma(20, data, index) < Technicals.sma(50, data, index):
+    def backtest_action(self, short_sma, long_sma):
+        if short_sma > long_sma:
             if not self.position_open:
-                self.execution_model.backtest_buy(float(data[index].get('close')), index, hist_array)
+                # price = float(data[index].get('close'))
+                # self.execution_model.backtest_buy(price, index)
                 self.position_open = True
+                return {'action': 'buy',
+                        'signal_str': 1}
+            else:
+                return {'action': 'pass',
+                        'signal_str': 1}
 
-        elif Technicals.sma(20, data, index) > Technicals.sma(50, data, index):
+        elif short_sma < long_sma:
             if self.position_open:
-                self.execution_model.backtest_sell(float(data[index].get('close')), index, hist_array)
+                # price = float(data[index].get('close'))
+                # self.execution_model.backtest_sell(price, index)
                 self.position_open = False
+                return {'action': 'sell',
+                        'signal_str': 1}
+            else:
+                return {'action': 'pass',
+                        'signal_str': 1}
 
     def action(self):
         pass
