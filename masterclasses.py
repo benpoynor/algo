@@ -92,9 +92,11 @@ class BacktestModel:
 
         for idx, val in enumerate(backtest_data):
             if val['action'] == 'buy':
-                print('bought at {}'.format(data.at[idx, 'close']))
+                # print('bought at {}'.format(data.at[idx, 'close']))
+                pass
             elif val['action'] == 'sell':
-                print('sold at {}'.format(data.at[idx, 'close']))
+                # print('sold at {}'.format(data.at[idx, 'close']))
+                pass
 
         return backtest_data
 

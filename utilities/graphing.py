@@ -14,19 +14,36 @@ def add_titlebox(ax, text):
     return ax
 
 
+def populate_infobox(ax, display_dict, size=1):
+    step = size / 30
+    font = size * 15
+    ax.text(.5, .95, 'Backtest Statistics',
+            horizontalalignment='center',
+            transform=ax.transAxes,
+            bbox=dict(facecolor='white', alpha=0.6),
+            fontsize=font * 2)
+    for i, (k, v) in enumerate(display_dict.items()):
+        ax.text(.1, .9 - (i * step), '{}: {}'.format(k, v),
+                horizontalalignment='center',
+                transform=ax.transAxes,
+                bbox=dict(facecolor='white', alpha=0.6),
+                fontsize=font)
+
+
 def moving_average_full_graph(data, short_period, long_period, backtest_data):
     # setup window
     plt.subplots_adjust(left=.04, bottom=.03, right=0.99, top=0.99, wspace=0.05, hspace=0.15)
     dataset = pd.DataFrame(data=data)
     x_range = np.arange(len(dataset))
-    gridsize = (8, 2)
+    gridsize = (8, 8)
 
     # declare axes
-    ax1 = plt.subplot2grid(gridsize, (0, 0), colspan=2, rowspan=4)
-    ax2 = plt.subplot2grid(gridsize, (4, 0), colspan=2, rowspan=1, sharex=ax1)
-    ax3 = plt.subplot2grid(gridsize, (5, 0), colspan=2, rowspan=1, sharex=ax1)
-    ax4 = plt.subplot2grid(gridsize, (6, 0), colspan=2, rowspan=1, sharex=ax1)
-    ax5 = plt.subplot2grid(gridsize, (7, 0), colspan=2, rowspan=1, sharex=ax1)
+    ax1 = plt.subplot2grid(gridsize, (0, 0), colspan=6, rowspan=4)
+    ax2 = plt.subplot2grid(gridsize, (4, 0), colspan=6, rowspan=1, sharex=ax1)
+    ax3 = plt.subplot2grid(gridsize, (5, 0), colspan=6, rowspan=1, sharex=ax1)
+    ax4 = plt.subplot2grid(gridsize, (6, 0), colspan=6, rowspan=1, sharex=ax1)
+    ax5 = plt.subplot2grid(gridsize, (7, 0), colspan=6, rowspan=1, sharex=ax1)
+    ax6 = plt.subplot2grid(gridsize, (0, 6), colspan=2, rowspan=8)
 
     sma_short = Technicals.pandas_sma(short_period, dataset)
     sma_long = Technicals.pandas_sma(long_period, dataset)
@@ -71,6 +88,10 @@ def moving_average_full_graph(data, short_period, long_period, backtest_data):
     sma_delta_dydx2.plot(ax=ax5)
     ax5.set_ylabel('Dy/Dx of SMA Delta')
     ax5.set_xlabel('date')
+
+    # sixth box
+    display_dict = {'test1': 20, 'test2': 40, 'test3': 60}
+    populate_infobox(ax6, display_dict)
 
     dx_axs = [ax2, ax3, ax4, ax5]
     for a in dx_axs:
