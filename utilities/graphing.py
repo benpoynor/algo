@@ -21,13 +21,15 @@ def populate_infobox(ax, display_dict, size=1):
             horizontalalignment='center',
             transform=ax.transAxes,
             bbox=dict(facecolor='white', alpha=0.6),
-            fontsize=font * 2)
+            fontsize=font * 2,
+            family='monospace')
     for i, (k, v) in enumerate(display_dict.items()):
         ax.text(.1, .9 - (i * step), '{}: {}'.format(k, v),
                 horizontalalignment='center',
                 transform=ax.transAxes,
                 bbox=dict(facecolor='white', alpha=0.6),
-                fontsize=font)
+                fontsize=font,
+                family='serif')
 
 
 def moving_average_full_graph(data, short_period, long_period, backtest_data):
@@ -72,21 +74,21 @@ def moving_average_full_graph(data, short_period, long_period, backtest_data):
     # second box
     dydxshort.plot(ax=ax2, color='blue')
     dydxlong.plot(ax=ax2, color='red')
-    ax2.set_ylabel(r'$\frac{dy}{dx} \mu$', fontsize=15)
+    ax2.set_ylabel(r'$\frac{dy}{dx} \mu$', fontsize=20)
 
     # third box
     sma_delta.plot(ax=ax3, color='purple')
-    ax3.set_ylabel(r'$\mu \Delta$', fontsize=15)
+    ax3.set_ylabel(r'$\mu \Delta$', fontsize=20)
     ax3.fill_between(x_range, sma_delta, 0, where=sma_delta >= 0, facecolor='green', interpolate=True, alpha=.5)
     ax3.fill_between(x_range, sma_delta, 0, where=sma_delta <= 0, facecolor='red', interpolate=True, alpha=.5)
 
     # fourth box
     sma_delta_dydx.plot(ax=ax4)
-    ax4.set_ylabel(r'$\frac{dy}{dx}[(\mu) \Delta$]', fontsize=15)
+    ax4.set_ylabel(r'$\frac{dy}{dx}(\mu \Delta$)', fontsize=20)
 
     # fifth box
     sma_delta_dydx2.plot(ax=ax5)
-    ax5.set_ylabel('Dy/Dx of SMA Delta')
+    ax5.set_ylabel(r'$\frac{d^2y}{dx^2}(\mu \Delta$)', fontsize=20)
     ax5.set_xlabel('date')
 
     # sixth box
