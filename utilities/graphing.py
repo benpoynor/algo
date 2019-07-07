@@ -32,10 +32,13 @@ def populate_infobox(ax, display_dict, size=1):
                 family='serif')
 
 
-def moving_average_full_graph(data, short_period, long_period, backtest_data):
+def moving_average_full_graph(data, short_period, long_period,
+                              backtest_data, account_equity):
     # setup window
     plt.subplots_adjust(left=.04, bottom=.03, right=0.99, top=0.99, wspace=0.05, hspace=0.15)
     dataset = pd.DataFrame(data=data)
+    account_equity = pd.DataFrame(data=account_equity)
+
     x_range = np.arange(len(dataset))
     gridsize = (8, 8)
 
@@ -53,7 +56,6 @@ def moving_average_full_graph(data, short_period, long_period, backtest_data):
     dydxlong = Technicals.calc_derivative(sma_long)
     sma_delta = sma_short - sma_long
     sma_delta_dydx = Technicals.calc_derivative(sma_delta)
-    sma_delta_dydx2 = Technicals.calc_derivative(sma_delta_dydx)
 
     # first box
     candlestick2_ochl(ax=ax1, opens=dataset['open'], closes=dataset['close'],
@@ -87,15 +89,15 @@ def moving_average_full_graph(data, short_period, long_period, backtest_data):
     ax4.set_ylabel(r'$\frac{dy}{dx}(\mu \Delta$)', fontsize=20)
 
     # fifth box
-    sma_delta_dydx2.plot(ax=ax5)
-    ax5.set_ylabel(r'$\frac{d^2y}{dx^2}(\mu \Delta$)', fontsize=20)
+    account_equity.plot(ax=ax5)
+    ax5.set_ylabel(r'$equity$', fontsize=20)
     ax5.set_xlabel('date')
 
     # sixth box
     display_dict = {'test1': 20, 'test2': 40, 'test3': 60}
     populate_infobox(ax6, display_dict)
 
-    dx_axs = [ax2, ax3, ax4, ax5]
+    dx_axs = [ax2, ax3, ax4]
     for a in dx_axs:
         a.axhline(0, linestyle='dashed', color='xkcd:dark grey',
                   alpha=0.6, label='Full-period mean', marker='')

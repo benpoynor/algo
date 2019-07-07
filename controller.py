@@ -6,12 +6,9 @@ from pprint import pprint
 
 if __name__ == "__main__":
     account = Account()
-    risk_model = RiskModel(account)
-    execution_model = ExecutionModel(account)
+    risk_model = RiskModel()
+    execution_model = ExecutionModel()
     algorithm = MovingAverageAlgo()
-    backtest_model = BacktestModel(algorithm=algorithm,
-                                   account=account,
-                                   execution_model=execution_model,
-                                   risk_model=risk_model)
+    backtest_model = BacktestModel(algorithm=algorithm)
 
-    backtest_model.execute_backtest('ETH-USD')
+    backtest_model.visualize_backtest('ETH-USD')
