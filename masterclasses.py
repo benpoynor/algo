@@ -116,7 +116,8 @@ class BacktestModel:
             self.update_quantity(signal)
             self.execute_on_signal(signal)
 
-            Account.update_equity()
+            # account.update_market_price
+            Account.update_equity()  # this will go at end of for loop that encloses this function in future
             equity = Account.equity
 
             backtest_data.append(signal)
