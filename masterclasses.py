@@ -5,10 +5,22 @@ from pprint import pprint
 
 class Account:
     equity = 0
+    cash = 0
+    # equity = cash + market value of all active holdings
+    holdings = {}
+    # {'DOGE-USD':  {'cost_basis': 100000,
+    #               'mkt_value': 99999,
+    #              'quantity': 12345}
+    #                               }
 
     def __init__(self):
         self.initial_capital = 1000
         Account.equity = self.initial_capital
+        Account.cash = Account.equity
+
+    @staticmethod
+    def update_equity():
+        Account.equity += 10
 
 
 class RiskModel:
@@ -31,13 +43,21 @@ class ExecutionModel:
 
     @staticmethod
     def backtest_buy(signal):
-        signal.update({'quantity': 100})
-        # arbitrary for now
+        c = Account.holdings.get(signal['currency'])
+        if c:
+            q1 = c.get('quantity')
+            c.update({'quantity': signal['quantity'] + q1})
+        else:
+            Account.holdings.update({signal['currency']: {'quantity': signal['quantity']}})
 
     @staticmethod
     def backtest_sell(signal):
-        signal.update({'quantity': 100})
-        # arbitrary for now
+        c = Account.holdings.get(signal['currency'])
+        if c:
+            q1 = c.get('quantity')
+            c.update({'quantity': q1 - signal['quantity']})
+        else:
+            Account.holdings.update({signal['currency']: {'quantity': -1 * signal['quantity']}})
 
 
 class Algorithm:
@@ -92,8 +112,11 @@ class BacktestModel:
             signal = self.algorithm.backtest_action(short_sma=sma20,
                                                     long_sma=sma50)
 
+            signal.update({'currency': currency})
             self.update_quantity(signal)
             self.execute_on_signal(signal)
+
+            Account.update_equity()
             equity = Account.equity
 
             backtest_data.append(signal)
