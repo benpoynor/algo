@@ -17,10 +17,27 @@ class Account:
         self.initial_capital = 1000
         Account.equity = self.initial_capital
         Account.cash = Account.equity
+        Account.holdings.update({'ETH-USD': {'cost_basis': 0,
+                                             'mkt_value': 0,
+                                             'quantity': 0}
+                                 })  # very temporary
+
+    @staticmethod
+    def update_mkt(currency, price):
+        c = Account.holdings.get(currency)
+        try:
+            c.update({'mkt_value': price * c['quantity']})
+        except KeyError:
+                print('error: no quantity established')
 
     @staticmethod
     def update_equity():
-        Account.equity += 10
+        if len(Account.holdings) > 0:
+            sum_mkt = 0
+            for k, v in Account.holdings.items():
+                sum_mkt += v['mkt_value']
+
+        Account.equity = Account.cash + sum_mkt
 
 
 class RiskModel:
@@ -44,20 +61,18 @@ class ExecutionModel:
     @staticmethod
     def backtest_buy(signal):
         c = Account.holdings.get(signal['currency'])
-        if c:
-            q1 = c.get('quantity')
-            c.update({'quantity': signal['quantity'] + q1})
-        else:
-            Account.holdings.update({signal['currency']: {'quantity': signal['quantity']}})
+        q1 = c.get('quantity')
+        c.update({'quantity': signal['quantity'] + q1})
 
     @staticmethod
     def backtest_sell(signal):
         c = Account.holdings.get(signal['currency'])
-        if c:
-            q1 = c.get('quantity')
+        q1 = c.get('quantity')
+        q2 = signal['quantity']
+        if q1 <= q2:
             c.update({'quantity': q1 - signal['quantity']})
         else:
-            Account.holdings.update({signal['currency']: {'quantity': -1 * signal['quantity']}})
+            c.update({'quantity': 0})
 
 
 class Algorithm:
@@ -116,8 +131,9 @@ class BacktestModel:
             self.update_quantity(signal)
             self.execute_on_signal(signal)
 
-            # account.update_market_price
-            Account.update_equity()  # this will go at end of for loop that encloses this function in future
+            Account.update_mkt(currency=currency,
+                               price=float(data.at[i, 'close']))
+            Account.update_equity()
             equity = Account.equity
 
             backtest_data.append(signal)
