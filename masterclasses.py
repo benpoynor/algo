@@ -7,6 +7,9 @@ class Account:
     equity = 0
     cash = 0
     # equity = cash + market value of all active holdings
+    # QUANTITY = AMOUNT IN NATIVE CURRENCY (ETH, BTC, ETC...)
+    # MKT_VALUE = WHAT THAT QUANTITY IS WORTH IN USD AT A GIVEN TIME
+
     holdings = {}
     # {'DOGE-USD':  {'cost_basis': 100000,
     #               'mkt_value': 99999,
@@ -25,15 +28,12 @@ class Account:
     @staticmethod
     def update_mkt(currency, price):
         c = Account.holdings.get(currency)
-        try:
-            c.update({'mkt_value': price * c['quantity']})
-        except KeyError:
-                print('error: no quantity established')
+        c.update({'mkt_value': price * c['quantity']})
 
     @staticmethod
     def update_equity():
+        sum_mkt = 0
         if len(Account.holdings) > 0:
-            sum_mkt = 0
             for k, v in Account.holdings.items():
                 sum_mkt += v['mkt_value']
 
@@ -45,7 +45,8 @@ class RiskModel:
 
     @staticmethod
     def get_position_size(signal_strength):
-        return signal_strength * (RiskModel.position_sizing * Account.equity)
+        # return signal_strength * (RiskModel.position_sizing * Account.equity)
+        return 5  # FUCK YOU MR. FUNCTION
 
 
 class ExecutionModel:
@@ -59,20 +60,25 @@ class ExecutionModel:
         pass
 
     @staticmethod
-    def backtest_buy(signal):
-        c = Account.holdings.get(signal['currency'])
-        q1 = c.get('quantity')
-        c.update({'quantity': signal['quantity'] + q1})
-
-    @staticmethod
-    def backtest_sell(signal):
+    def backtest_buy(signal, price):
         c = Account.holdings.get(signal['currency'])
         q1 = c.get('quantity')
         q2 = signal['quantity']
-        if q1 <= q2:
-            c.update({'quantity': q1 - signal['quantity']})
+        c.update({'quantity': q1 + q2})
+        Account.cash -= q2 * price
+
+    @staticmethod
+    def backtest_sell(signal, price):
+        c = Account.holdings.get(signal['currency'])
+        q1 = c.get('quantity')
+        q2 = signal['quantity']
+        if q2 < q1:
+            tq = q1 - q2
         else:
-            c.update({'quantity': 0})
+            tq = q1
+
+        c.update({'quantity': tq})
+        Account.cash += tq * price
 
 
 class Algorithm:
@@ -105,12 +111,12 @@ class BacktestModel:
         signal.update({'quantity': RiskModel.get_position_size(signal['signal_str'])})
 
     @staticmethod
-    def execute_on_signal(signal):
+    def execute_on_signal(signal, price):
         # feeds the signal into execution model to simulate buying and selling
         if signal['action'] == 'buy':
-            ExecutionModel.backtest_buy(signal)
+            ExecutionModel.backtest_buy(signal, price)
         elif signal['action'] == 'sell':
-            ExecutionModel.backtest_sell(signal)
+            ExecutionModel.backtest_sell(signal, price)
         else:
             signal.update({'quantity': 0})
 
@@ -129,7 +135,7 @@ class BacktestModel:
 
             signal.update({'currency': currency})
             self.update_quantity(signal)
-            self.execute_on_signal(signal)
+            self.execute_on_signal(signal, float(data.at[i, 'close']))
 
             Account.update_mkt(currency=currency,
                                price=float(data.at[i, 'close']))
