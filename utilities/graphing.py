@@ -24,7 +24,7 @@ def populate_infobox(ax, display_dict, size=1):
             fontsize=font * 2,
             family='monospace')
     for i, (k, v) in enumerate(display_dict.items()):
-        ax.text(.1, .9 - (i * step), '{}: {}'.format(k, v),
+        ax.text(.5, .9 - (i * step), '{}: {}'.format(k, v),
                 horizontalalignment='center',
                 transform=ax.transAxes,
                 bbox=dict(facecolor='white', alpha=0.6),
@@ -32,7 +32,11 @@ def populate_infobox(ax, display_dict, size=1):
                 family='serif')
 
 
-def moving_average_full_graph(data, short_period, long_period, backtest_data):
+def moving_average_full_graph(data,  # full set of price data
+                              short_period,  # short period to plot a moving avg.
+                              long_period,   # ditto
+                              backtest_data,   # dict of arrays of data that changes over time
+                              backtest_stats):  # dict of data that's finalized once at end of backtest
     # set up data
     signal_data = backtest_data['signal_data']
     account_equity = pd.DataFrame(data=backtest_data['account_equity'])
@@ -95,8 +99,7 @@ def moving_average_full_graph(data, short_period, long_period, backtest_data):
     ax5.set_xlabel('date')
 
     # sixth box
-    display_dict = {'test1': 20, 'test2': 40, 'test3': 60}
-    populate_infobox(ax6, display_dict)
+    populate_infobox(ax6, backtest_stats)
 
     # draw line at 0 on the derivative graphs
     dx_axs = [ax2, ax3, ax4]

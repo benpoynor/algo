@@ -120,11 +120,17 @@ class BacktestModel:
         else:
             signal.update({'quantity': 0})
 
+    @staticmethod
+    def calc_drawdown(equity_history):
+        pass
+
     def generate_backtest(self, currency):
         data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(currency)))
         backtest_data = {}
         signal_data = []
         account_equity = []
+        initial_equity = Account.equity
+        equity = 0
 
         for i in range(len(data)):
             sma20_series = Technicals.pandas_sma(20, data)
@@ -142,22 +148,28 @@ class BacktestModel:
                                price=float(data.at[i, 'close']))
             Account.update_equity()
             equity = Account.equity
-
             signal_data.append(signal)
             account_equity.append(equity)
-            backtest_data.update({'signal_data': signal_data,
-                                  'account_equity': account_equity})
 
-        return backtest_data
+        backtest_data.update({'signal_data': signal_data,
+                              'account_equity': account_equity})
+        profit = round(equity - initial_equity, 2)
+        backtest_stats = {
+            'initial equity': '${}'.format(initial_equity),
+            'profit': '${}'.format(profit),
+            'return': '{}%'.format(round(100 * (profit / initial_equity), 2))
+        }
+        return backtest_data, backtest_stats
 
     def visualize_backtest(self, currency):
         data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
-        backtest_data = self.generate_backtest(currency)
+        backtest_data, backtest_stats = self.generate_backtest(currency)
 
         moving_average_full_graph(data=data,
                                   short_period=20,
                                   long_period=50,
-                                  backtest_data=backtest_data)
+                                  backtest_data=backtest_data,
+                                  backtest_stats=backtest_stats)
 
     # def full_backest(self, universe):
     #     results_dict = {}
