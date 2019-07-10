@@ -97,6 +97,15 @@ def moving_average_full_graph(data,  # full set of price data
     account_equity.plot(ax=ax5)
     ax5.set_ylabel(r'$equity$', fontsize=20)
     ax5.set_xlabel('date')
+    gmax_idx = backtest_data.get('gmax_idx')
+    gmin_idx = backtest_data.get('gmin_idx')
+
+    if gmax_idx and gmin_idx:
+        ax5.fill_between([gmax_idx, gmin_idx],
+                         float(account_equity.at[gmin_idx, 0]),
+                         float(account_equity.at[gmax_idx, 0]),
+                         facecolor='red',
+                         alpha=.25)
 
     # sixth box
     populate_infobox(ax6, backtest_stats)

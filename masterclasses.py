@@ -121,8 +121,39 @@ class BacktestModel:
             signal.update({'quantity': 0})
 
     @staticmethod
-    def calc_drawdown(equity_history):
-        pass
+    def calc_drawdown(equity_history):  # i'm sure there's a better way but i don't care
+        highest_high = equity_history[0]
+        lowest_low = equity_history[0]
+        dip_length = 0
+        longest_dip = 0
+        largest_dip = 0
+        gmax_idx = 0
+        gmin_idx = 0
+        for idx, val in enumerate(equity_history):
+            if val > highest_high:
+                highest_high = val
+                lowest_low = val
+                dip_length = 0
+                gmax_idx = idx
+            else:
+                dip_length += 1
+            if val < lowest_low:
+                lowest_low = val
+                gmin_idx = idx
+            if dip_length > longest_dip:
+                longest_dip = dip_length
+            dip_size = highest_high - lowest_low
+            if dip_size > largest_dip:
+                largest_dip = dip_size
+
+        max_dd_percent = 100 * ((highest_high - lowest_low) / highest_high)
+        max_dd_length = longest_dip
+        drawdown_stats = {'ddp': max_dd_percent,
+                          'ddl': max_dd_length,
+                          'gmax_idx': gmax_idx,
+                          'gmin_idx': gmin_idx}
+
+        return drawdown_stats
 
     def generate_backtest(self, currency):
         data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(currency)))
@@ -151,13 +182,20 @@ class BacktestModel:
             signal_data.append(signal)
             account_equity.append(equity)
 
+        dd_stats = self.calc_drawdown(account_equity)
         backtest_data.update({'signal_data': signal_data,
-                              'account_equity': account_equity})
+                              'account_equity': account_equity,
+                              'gmax_idx': dd_stats['gmax_idx'],
+                              'gmin_idx': dd_stats['gmin_idx'],
+                              })
         profit = round(equity - initial_equity, 2)
+
         backtest_stats = {
             'initial equity': '${}'.format(initial_equity),
             'profit': '${}'.format(profit),
-            'return': '{}%'.format(round(100 * (profit / initial_equity), 2))
+            'return': '{}%'.format(round(100 * (profit / initial_equity), 2)),
+            'max. drawdown': '{}%'.format(round(dd_stats['ddp'], 2)),
+            'longest drawdown': '{} candles'.format(dd_stats['ddl'])
         }
         return backtest_data, backtest_stats
 
