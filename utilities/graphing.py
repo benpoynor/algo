@@ -32,13 +32,14 @@ def populate_infobox(ax, display_dict, size=1):
                 family='serif')
 
 
-def moving_average_full_graph(data, short_period, long_period,
-                              backtest_data, account_equity):
+def moving_average_full_graph(data, short_period, long_period, backtest_data):
+    # set up data
+    signal_data = backtest_data['signal_data']
+    account_equity = pd.DataFrame(data=backtest_data['account_equity'])
+
     # setup window
     plt.subplots_adjust(left=.04, bottom=.03, right=0.99, top=0.99, wspace=0.05, hspace=0.15)
     dataset = pd.DataFrame(data=data)
-    account_equity = pd.DataFrame(data=account_equity)
-
     x_range = np.arange(len(dataset))
     gridsize = (8, 8)
 
@@ -67,7 +68,7 @@ def moving_average_full_graph(data, short_period, long_period,
     ax1.set_xlabel('Date')
     ax1.set_ylabel('Price', fontsize=20)
 
-    for idx, val in enumerate(backtest_data):
+    for idx, val in enumerate(signal_data):
         if val['action'] == 'buy':
             ax1.plot(idx, float(dataset.at[idx, 'close']), '^', color='black', markersize=10)
         elif val['action'] == 'sell':
@@ -97,6 +98,7 @@ def moving_average_full_graph(data, short_period, long_period,
     display_dict = {'test1': 20, 'test2': 40, 'test3': 60}
     populate_infobox(ax6, display_dict)
 
+    # draw line at 0 on the derivative graphs
     dx_axs = [ax2, ax3, ax4]
     for a in dx_axs:
         a.axhline(0, linestyle='dashed', color='xkcd:dark grey',

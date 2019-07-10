@@ -122,7 +122,8 @@ class BacktestModel:
 
     def generate_backtest(self, currency):
         data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(currency)))
-        backtest_data = []
+        backtest_data = {}
+        signal_data = []
         account_equity = []
 
         for i in range(len(data)):
@@ -142,20 +143,21 @@ class BacktestModel:
             Account.update_equity()
             equity = Account.equity
 
-            backtest_data.append(signal)
+            signal_data.append(signal)
             account_equity.append(equity)
+            backtest_data.update({'signal_data': signal_data,
+                                  'account_equity': account_equity})
 
-        return backtest_data, account_equity
+        return backtest_data
 
     def visualize_backtest(self, currency):
         data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
-        backtest_data, account_equity = self.generate_backtest(currency)
+        backtest_data = self.generate_backtest(currency)
 
         moving_average_full_graph(data=data,
                                   short_period=20,
                                   long_period=50,
-                                  backtest_data=backtest_data,
-                                  account_equity=account_equity)
+                                  backtest_data=backtest_data)
 
     # def full_backest(self, universe):
     #     results_dict = {}
