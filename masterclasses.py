@@ -1,6 +1,8 @@
 from utilities.filehandler import FileHandler
 from utilities.graphing import *
+from settings import BACKTEST_CURRENCIES as UNIVERSE
 from pprint import pprint
+from threading import Thread
 
 
 class Account:
@@ -20,10 +22,10 @@ class Account:
         self.initial_capital = 1000
         Account.equity = self.initial_capital
         Account.cash = Account.equity
-        Account.holdings.update({'ETH-USD': {'cost_basis': 0,
-                                             'mkt_value': 0,
-                                             'quantity': 0}
-                                 })  # very temporary
+        defaults = {'cost_basis': 0, 'mkt_value': 0, 'quantity': 0}
+        for c in UNIVERSE:
+            Account.holdings.update({c: defaults})
+        # Account.holdings.update({'ETH-USD': defaults})
 
     @staticmethod
     def update_mkt(currency, price):
@@ -33,9 +35,8 @@ class Account:
     @staticmethod
     def update_equity():
         sum_mkt = 0
-        if len(Account.holdings) > 0:
-            for k, v in Account.holdings.items():
-                sum_mkt += v['mkt_value']
+        for k, v in Account.holdings.items():
+            sum_mkt += v['mkt_value']
 
         Account.equity = Account.cash + sum_mkt
 
@@ -76,9 +77,28 @@ class ExecutionModel:
             tq = q1 - q2
         else:
             tq = q1
-
-        c.update({'quantity': tq})
+        c.update({'quantity': q1 - tq})
         Account.cash += tq * price
+
+    @staticmethod
+    def backtest_buy_v2(signal):
+        c = Account.holdings.get(signal['currency'])
+        q1 = c.get('quantity')
+        q2 = signal['quantity']
+        c.update({'quantity': q1 + q2})
+        Account.cash -= q2 * signal['price_at_signal']
+
+    @staticmethod
+    def backtest_sell_v2(signal):
+        c = Account.holdings.get(signal['currency'])
+        q1 = c.get('quantity')
+        q2 = signal['quantity']
+        if q2 < q1:
+            tq = q1 - q2
+        else:
+            tq = q1
+        c.update({'quantity': q1 - tq})
+        Account.cash += tq * signal['price_at_signal']
 
 
 class Algorithm:
@@ -121,41 +141,15 @@ class BacktestModel:
             signal.update({'quantity': 0})
 
     @staticmethod
-    def calc_drawdown(equity_history):  # i'm sure there's a better way but i don't care
-        highest_high = equity_history[0]
-        lowest_low = equity_history[0]
-        dip_length = 0
-        longest_dip = 0
-        largest_dip = 0
-        gmax_idx = 0
-        gmin_idx = 0
-        for idx, val in enumerate(equity_history):
-            if val > highest_high:
-                highest_high = val
-                lowest_low = val
-                dip_length = 0
-                gmax_idx = idx
-            else:
-                dip_length += 1
-            if val < lowest_low:
-                lowest_low = val
-                gmin_idx = idx
-            if dip_length > longest_dip:
-                longest_dip = dip_length
-            dip_size = highest_high - lowest_low
-            if dip_size > largest_dip:
-                largest_dip = dip_size
+    def execute_on_signal_v2(signal):
+        if signal['action'] == 'buy':
+            ExecutionModel.backtest_buy_v2(signal)
+        elif signal['action'] == 'sell':
+            ExecutionModel.backtest_sell_v2(signal)
+        else:
+            signal.update({'quantity': 0})
 
-        max_dd_percent = 100 * ((highest_high - lowest_low) / highest_high)
-        max_dd_length = longest_dip
-        drawdown_stats = {'ddp': max_dd_percent,
-                          'ddl': max_dd_length,
-                          'gmax_idx': gmax_idx,
-                          'gmin_idx': gmin_idx}
-
-        return drawdown_stats
-
-    def generate_backtest(self, currency):
+    def generate_backtest(self, currency):  # OLD
         data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(currency)))
         backtest_data = {}
         signal_data = []
@@ -182,7 +176,7 @@ class BacktestModel:
             signal_data.append(signal)
             account_equity.append(equity)
 
-        dd_stats = self.calc_drawdown(account_equity)
+        dd_stats = Technicals.calc_drawdown(account_equity)
         backtest_data.update({'signal_data': signal_data,
                               'account_equity': account_equity,
                               'gmax_idx': dd_stats['gmax_idx'],
@@ -199,7 +193,58 @@ class BacktestModel:
         }
         return backtest_data, backtest_stats
 
+    # def visualize_backtest(self, currency):
+    #     data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
+    #     backtest_data, backtest_stats = self.generate_backtest(currency)
+    #
+    #     moving_average_full_graph(data=data,
+    #                               short_period=20,
+    #                               long_period=50,
+    #                               backtest_data=backtest_data,
+    #                               backtest_stats=backtest_stats)
+
+    def get_signal_data(self, currency, signal_book):
+        data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(currency)))
+        signal_data = []
+
+        for i in range(len(data)):
+            sma20_series = Technicals.pandas_sma(20, data)
+            sma50_series = Technicals.pandas_sma(50, data)
+            sma20 = float(sma20_series[i])
+            sma50 = float(sma50_series[i])
+            signal = self.algorithm.backtest_action(short_sma=sma20,
+                                                    long_sma=sma50)
+
+            signal.update({'currency': currency})
+            signal.update({'price_at_signal': float(data.at[i, 'close'])})
+            self.update_quantity(signal)
+            signal_data.append(signal)
+
+        signal_book.update({currency: signal_data})
+
+    def full_backtest(self, universe):
+        signal_book = {}
+        threads = []
+        for currency in universe:
+            process = Thread(target=self.get_signal_data, args=[
+                currency, signal_book
+            ])
+            process.start()
+            threads.append(process)
+        for process in threads:
+            process.join()
+
+        return signal_book
+
+    def calc_backtest(self, signal_book):
+        for signal_arr in signal_book.values():
+            for signal in signal_arr:
+                self.execute_on_signal_v2(signal)
+
     def visualize_backtest(self, currency):
+        signal_book = self.full_backtest(UNIVERSE)
+        self.calc_backtest(signal_book)
+
         data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
         backtest_data, backtest_stats = self.generate_backtest(currency)
 

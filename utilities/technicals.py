@@ -25,4 +25,39 @@ class Technicals:
             dxdys.append(dy/2)
         return pd.Series(dxdys)
 
+    @staticmethod
+    def calc_drawdown(equity_history):  # i'm sure there's a better way but i don't care
+        highest_high = equity_history[0]
+        lowest_low = equity_history[0]
+        dip_length = 0
+        longest_dip = 0
+        largest_dip = 0
+        gmax_idx = 0
+        gmin_idx = 0
+        for idx, val in enumerate(equity_history):
+            if val > highest_high:
+                highest_high = val
+                lowest_low = val
+                dip_length = 0
+                gmax_idx = idx
+            else:
+                dip_length += 1
+            if val < lowest_low:
+                lowest_low = val
+                gmin_idx = idx
+            if dip_length > longest_dip:
+                longest_dip = dip_length
+            dip_size = highest_high - lowest_low
+            if dip_size > largest_dip:
+                largest_dip = dip_size
+
+        max_dd_percent = 100 * ((highest_high - lowest_low) / highest_high)
+        max_dd_length = longest_dip
+        drawdown_stats = {'ddp': max_dd_percent,
+                          'ddl': max_dd_length,
+                          'gmax_idx': gmax_idx,
+                          'gmin_idx': gmin_idx}
+
+        return drawdown_stats
+
     # TODO: Make sure the datasets remain lined up after calculating dydx
