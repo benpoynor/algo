@@ -36,10 +36,11 @@ def moving_average_full_graph(data,  # full set of price data
                               short_period,  # short period to plot a moving avg.
                               long_period,   # ditto
                               backtest_data,   # dict of arrays of data that changes over time
-                              backtest_stats):  # dict of data that's finalized once at end of backtest
+                              backtest_stats,  # dict of data that's finalized once at end of backtest
+                              equity_history):
     # set up data
     signal_data = backtest_data['signal_data']
-    account_equity = pd.DataFrame(data=backtest_data['account_equity'])
+    account_equity = pd.DataFrame(data=equity_history)
 
     # setup window
     plt.subplots_adjust(left=.04, bottom=.03, right=0.99, top=0.99, wspace=0.05, hspace=0.15)
@@ -116,6 +117,14 @@ def moving_average_full_graph(data,  # full set of price data
         a.axhline(0, linestyle='dashed', color='xkcd:dark grey',
                   alpha=0.6, label='Full-period mean', marker='')
 
+    mng = plt.get_current_fig_manager()
+    mng.resize(*mng.window.maxsize())
+    plt.show()
+
+
+def debug_graph(equity_history):
+    ax1 = plt.subplot2grid((1,1), (0, 0))
+    equity_history.plot(ax=ax1)
     mng = plt.get_current_fig_manager()
     mng.resize(*mng.window.maxsize())
     plt.show()

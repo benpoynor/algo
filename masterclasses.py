@@ -13,19 +13,17 @@ class Account:
     # MKT_VALUE = WHAT THAT QUANTITY IS WORTH IN USD AT A GIVEN TIME
 
     holdings = {}
-    # {'DOGE-USD':  {'cost_basis': 100000,
-    #               'mkt_value': 99999,
-    #              'quantity': 12345}
-    #                               }
+    market_values = {}
+    # {'DOGE-USD':  20}
 
     def __init__(self):
         self.initial_capital = 1000
         Account.equity = self.initial_capital
         Account.cash = Account.equity
-        defaults = {'cost_basis': 0, 'mkt_value': 0, 'quantity': 0}
+
         for c in UNIVERSE:
-            Account.holdings.update({c: defaults})
-        # Account.holdings.update({'ETH-USD': defaults})
+            Account.holdings.update({c: 0})
+            Account.market_values.update({c: 0})
 
     @staticmethod
     def update_mkt(currency, price):
@@ -33,10 +31,23 @@ class Account:
         c.update({'mkt_value': price * c['quantity']})
 
     @staticmethod
+    def update_mkt_v2(signal):
+        Account.market_values.update(
+            {signal['currency']: signal['price'] * Account.holdings[signal['currency']]})
+
+    @staticmethod
     def update_equity():
         sum_mkt = 0
         for k, v in Account.holdings.items():
             sum_mkt += v['mkt_value']
+
+        Account.equity = Account.cash + sum_mkt
+
+    @staticmethod
+    def update_equity_v2():
+        sum_mkt = 0
+        for v in Account.market_values.values():
+            sum_mkt += v
 
         Account.equity = Account.cash + sum_mkt
 
@@ -82,28 +93,42 @@ class ExecutionModel:
 
     @staticmethod
     def backtest_buy_v2(signal):
-        c = Account.holdings.get(signal['currency'])
-        q1 = c.get('quantity')
+        q1 = Account.holdings.get(signal['currency'])
         q2 = signal['quantity']
-        c.update({'quantity': q1 + q2})
-        Account.cash -= q2 * signal['price_at_signal']
+        print('bought {} {} at {}. Total: '
+              '{} -> Quantity of {}: {} --> {}'.format(signal['quantity'],
+                                                       signal['currency'],
+                                                       signal['price'],
+                                                       signal['price'] * signal['quantity'],
+                                                       signal['currency'],
+                                                        q1, q1 + q2
+                                                        ))
+        Account.holdings[signal['currency']] = q1 + q2
+        Account.cash -= q2 * signal['price']
 
     @staticmethod
     def backtest_sell_v2(signal):
-        c = Account.holdings.get(signal['currency'])
-        q1 = c.get('quantity')
+        q1 = Account.holdings.get(signal['currency'])
         q2 = signal['quantity']
         if q2 < q1:
             tq = q1 - q2
         else:
             tq = q1
-        c.update({'quantity': q1 - tq})
-        Account.cash += tq * signal['price_at_signal']
+        print('sold {} {} at {}. Total: '
+              '{} -> Quantity of {}: {} --> {}'.format(signal['quantity'],
+                                                        signal['currency'],
+                                                        signal['price'],
+                                                        signal['price'] * signal['quantity'],
+                                                        signal['currency'],
+                                                        q1, q1 - tq
+                                                        ))
+        Account.holdings[signal['currency']] = q1 - tq
+        Account.cash += tq * signal['price']
 
 
 class Algorithm:
     # index here just means date
-    def backtest_action(self, data, index):
+    def backtest_action(self, short_sma, long_sma, currency):
         raise NotImplementedError
 
     def action(self):
@@ -203,56 +228,70 @@ class BacktestModel:
     #                               backtest_data=backtest_data,
     #                               backtest_stats=backtest_stats)
 
-    def get_signal_data(self, currency, signal_book):
-        data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(currency)))
-        signal_data = []
+    def get_individual_signal(self, currency, data, idx):
+        sma20_series = Technicals.pandas_sma(20, data)
+        sma50_series = Technicals.pandas_sma(50, data)
+        sma20 = float(sma20_series[idx])
+        sma50 = float(sma50_series[idx])
+        signal = self.algorithm.backtest_action(short_sma=sma20,
+                                                long_sma=sma50)
 
-        for i in range(len(data)):
-            sma20_series = Technicals.pandas_sma(20, data)
-            sma50_series = Technicals.pandas_sma(50, data)
-            sma20 = float(sma20_series[i])
-            sma50 = float(sma50_series[i])
-            signal = self.algorithm.backtest_action(short_sma=sma20,
-                                                    long_sma=sma50)
+        signal.update({'currency': currency})
+        signal.update({'price_at_signal': float(data.at[idx, 'close'])})
+        self.update_quantity(signal)
+        return signal
 
-            signal.update({'currency': currency})
-            signal.update({'price_at_signal': float(data.at[i, 'close'])})
-            self.update_quantity(signal)
-            signal_data.append(signal)
+    # self.execute_on_signal_v2(signal)
+    # Account.update_mkt_v2(signal)
+    # Account.update_equity()
+    # equity = Account.equity
+    # account_equity.append(equity)
 
-        signal_book.update({currency: signal_data})
+    def calc_backtest(self, universe):
+        currencies = universe
+        data_dict = {}
+        equity_history = []
 
-    def full_backtest(self, universe):
-        signal_book = {}
-        threads = []
-        for currency in universe:
-            process = Thread(target=self.get_signal_data, args=[
-                currency, signal_book
-            ])
-            process.start()
-            threads.append(process)
-        for process in threads:
-            process.join()
+        for c in currencies:
+            data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(c)))
+            data_dict.update({c: data})
 
-        return signal_book
-
-    def calc_backtest(self, signal_book):
-        for signal_arr in signal_book.values():
-            for signal in signal_arr:
+        for idx in range(len(data)):
+            for c in currencies:
+                sma20_series = Technicals.pandas_sma(20, data_dict[c])
+                sma50_series = Technicals.pandas_sma(50, data_dict[c])
+                sma20 = float(sma20_series[idx])
+                sma50 = float(sma50_series[idx])
+                signal = self.algorithm.backtest_action(short_sma=sma20,
+                                                        long_sma=sma50,
+                                                        currency=c)
+                if signal['action'] == 'buy':
+                    print('sma cross for {} @ idx: {}'.format(c, idx))
+                signal.update({'currency': c})
+                signal.update({'price': float(data_dict[c].at[idx, 'close'])})
+                signal.update({'quantity': RiskModel.get_position_size(signal['signal_str'])})
                 self.execute_on_signal_v2(signal)
+                Account.update_mkt_v2(signal)
+                Account.update_equity_v2()
+            equity = Account.equity
+            equity_history.append(equity)
+
+        return pd.DataFrame(data=equity_history)
 
     def visualize_backtest(self, currency):
-        signal_book = self.full_backtest(UNIVERSE)
-        self.calc_backtest(signal_book)
+        # data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
+        # backtest_data, backtest_stats = self.generate_backtest(currency)
 
-        data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
-        backtest_data, backtest_stats = self.generate_backtest(currency)
+        equity_history = self.calc_backtest(UNIVERSE)
 
-        moving_average_full_graph(data=data,
-                                  short_period=20,
-                                  long_period=50,
-                                  backtest_data=backtest_data,
-                                  backtest_stats=backtest_stats)
+        debug_graph(equity_history)
+
+        # moving_average_full_graph(data=data,
+        #                           short_period=20,
+        #                           long_period=50,
+        #                           backtest_data=backtest_data,
+        #                           backtest_stats=backtest_stats,
+        #                           equity_history=equity_history)
 
     # def full_backest(self, universe):
     #     results_dict = {}

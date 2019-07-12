@@ -8,7 +8,7 @@ if __name__ == "__main__":
     account = Account()
     risk_model = RiskModel()
     execution_model = ExecutionModel()
-    algorithm = MovingAverageAlgo()
+    algorithm = MovingAverageAlgo(bc=BC)
     backtest_model = BacktestModel(algorithm=algorithm)
 
     backtest_model.visualize_backtest('ETH-USD')
