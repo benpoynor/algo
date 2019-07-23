@@ -64,6 +64,25 @@ class RiskModel:
 class ExecutionModel:
 
     @staticmethod
+    def debug(signal):
+        if signal['action'] == 'buy':
+            q1 = Account.holdings.get(signal['currency'])
+            q2 = signal['quantity']
+            print('bought {} {} at {}. Total: '
+                  '{} -> Quantity of {}: {} --> {}'
+                  .format(signal['quantity'], signal['currency'], signal['price'],
+                          signal['price'] * signal['quantity'], signal['currency'],
+                          q1, q1 + q2))
+        if signal['action'] == 'sell':
+            q1 = Account.holdings.get(signal['currency'])
+            tq = q1 - signal['quantity'] if signal['quantity'] < q1 else q1
+            print('sold {} {} at {}. Total: '
+                  '{} -> Quantity of {}: {} --> {}'
+                  .format(signal['quantity'], signal['currency'], signal['price'],
+                          signal['price'] * signal['quantity'], signal['currency'],
+                          q1, q1 - tq))
+
+    @staticmethod
     def limit_buy(price, currency, time_limit):
         pass
 
@@ -95,14 +114,7 @@ class ExecutionModel:
     def backtest_buy_v2(signal):
         q1 = Account.holdings.get(signal['currency'])
         q2 = signal['quantity']
-        print('bought {} {} at {}. Total: '
-              '{} -> Quantity of {}: {} --> {}'.format(signal['quantity'],
-                                                       signal['currency'],
-                                                       signal['price'],
-                                                       signal['price'] * signal['quantity'],
-                                                       signal['currency'],
-                                                        q1, q1 + q2
-                                                        ))
+        # ExecutionModel.debug(signal)
         Account.holdings[signal['currency']] = q1 + q2
         Account.cash -= q2 * signal['price']
 
@@ -110,18 +122,8 @@ class ExecutionModel:
     def backtest_sell_v2(signal):
         q1 = Account.holdings.get(signal['currency'])
         q2 = signal['quantity']
-        if q2 < q1:
-            tq = q1 - q2
-        else:
-            tq = q1
-        print('sold {} {} at {}. Total: '
-              '{} -> Quantity of {}: {} --> {}'.format(signal['quantity'],
-                                                        signal['currency'],
-                                                        signal['price'],
-                                                        signal['price'] * signal['quantity'],
-                                                        signal['currency'],
-                                                        q1, q1 - tq
-                                                        ))
+        tq = q1 - q2 if q2 < q1 else q1
+        # ExecutionModel.debug(signal)
         Account.holdings[signal['currency']] = q1 - tq
         Account.cash += tq * signal['price']
 
@@ -251,6 +253,7 @@ class BacktestModel:
         currencies = universe
         data_dict = {}
         equity_history = []
+        data = None
 
         for c in currencies:
             data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(c)))
@@ -265,8 +268,6 @@ class BacktestModel:
                 signal = self.algorithm.backtest_action(short_sma=sma20,
                                                         long_sma=sma50,
                                                         currency=c)
-                if signal['action'] == 'buy':
-                    print('sma cross for {} @ idx: {}'.format(c, idx))
                 signal.update({'currency': c})
                 signal.update({'price': float(data_dict[c].at[idx, 'close'])})
                 signal.update({'quantity': RiskModel.get_position_size(signal['signal_str'])})
