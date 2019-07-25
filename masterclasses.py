@@ -161,7 +161,7 @@ class BacktestModel:
 
     generated_data = typing.NamedTuple('rdata',
                                        [('price_data', dict),
-                                        ('equity_history', pd.DataFrame),
+                                        ('equity_history', list),
                                         ('signal_data', dict)])
 
     def __init__(self, algorithm):
@@ -307,7 +307,7 @@ class BacktestModel:
             equity_history.append(equity)
 
         return self.generated_data(price_data=data_dict,
-                                   equity_history=pd.DataFrame(equity_history),
+                                   equity_history=equity_history,
                                    signal_data=sig_dict)
 
     def calc_backtest(self, gd: generated_data) -> BacktestStats:
@@ -326,7 +326,7 @@ class BacktestModel:
         }
         return self.BacktestStats(price_data=gd.price_data,
                                   signal_data=gd.signal_data,
-                                  equity_history=gd.equity_history,
+                                  equity_history=pd.DataFrame(gd.equity_history),
                                   backtest_stats=backtest_stats)
 
     def visualize_backtest(self, currency):
@@ -334,8 +334,9 @@ class BacktestModel:
         # backtest_data, backtest_stats = self.generate_backtest(currency)
 
         gd = self.gen_backtest(UNIVERSE)
+        bs = self.calc_backtest(gd)
 
-        debug_graph(gd.equity_history)
+        debug_graph(bs.equity_history)
 
         # moving_average_full_graph(data=data,
         #                           short_period=20,
