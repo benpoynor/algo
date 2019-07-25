@@ -159,6 +159,11 @@ class BacktestModel:
         def get_price_dataframe(self, currency: str) -> pd.DataFrame:
             return self.price_data.get(currency)
 
+    generated_data = typing.NamedTuple('rdata',
+                                       [('price_data', dict),
+                                        ('equity_history', pd.DataFrame),
+                                        ('signal_data', dict)])
+
     def __init__(self, algorithm):
         self.algorithm = algorithm
 
@@ -269,15 +274,18 @@ class BacktestModel:
     # equity = Account.equity
     # account_equity.append(equity)
 
-    def gen_backtest(self, universe):
+    def gen_backtest(self, universe: list) -> generated_data:
+
         currencies = universe
         data_dict = {}
+        sig_dict = {}
         equity_history = []
         data = None
 
         for c in currencies:
             data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(c)))
             data_dict.update({c: data})
+            sig_dict.update({c: []})
 
         for idx in range(len(data)):
             for c in currencies:
@@ -294,23 +302,40 @@ class BacktestModel:
                 self.execute_on_signal_v2(signal)
                 Account.update_mkt_v2(signal)
                 Account.update_equity_v2()
+                sig_dict.get(c).append(signal)
             equity = Account.equity
             equity_history.append(equity)
 
-        return pd.DataFrame(data=equity_history)
+        return self.generated_data(price_data=data_dict,
+                                   equity_history=pd.DataFrame(equity_history),
+                                   signal_data=sig_dict)
 
-    def calc_backtest(self, equity_history, signal_history):
-        pass
+    def calc_backtest(self, gd: generated_data) -> BacktestStats:
+        dd_stats = Technicals.calc_drawdown(gd.equity_history)
 
-    # def graph(algorithm instance,
+        profit = round(gd.equity_history[-1] - gd.equity_history[0], 2)
+
+        backtest_stats = {
+            'initial equity': '${}'.format(gd.equity_history[0]),
+            'profit': '${}'.format(profit),
+            'return': '{}%'.format(round(100 * (profit / gd.equity_history[0]), 2)),
+            'max. drawdown': '{}%'.format(round(dd_stats['ddp'], 2)),
+            'longest drawdown': '{} candles'.format(dd_stats['ddl']),
+            'gmax_idx': dd_stats['gmax_idx'],
+            'gmin_idx': dd_stats['gmin_idx'],
+        }
+        return self.BacktestStats(price_data=gd.price_data,
+                                  signal_data=gd.signal_data,
+                                  equity_history=gd.equity_history,
+                                  backtest_stats=backtest_stats)
 
     def visualize_backtest(self, currency):
         # data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
         # backtest_data, backtest_stats = self.generate_backtest(currency)
 
-        equity_history = self.gen_backtest(UNIVERSE)
+        gd = self.gen_backtest(UNIVERSE)
 
-        debug_graph(equity_history)
+        debug_graph(gd.equity_history)
 
         # moving_average_full_graph(data=data,
         #                           short_period=20,
