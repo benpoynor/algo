@@ -53,8 +53,8 @@ class Technicals:
 
         max_dd_percent = 100 * ((highest_high - lowest_low) / highest_high)
         max_dd_length = longest_dip
-        drawdown_stats = {'ddp': max_dd_percent,
-                          'ddl': max_dd_length,
+        drawdown_stats = {'drawdown_percent': max_dd_percent,
+                          'drawdown_length': max_dd_length,
                           'gmax_idx': gmax_idx,
                           'gmin_idx': gmin_idx}
 

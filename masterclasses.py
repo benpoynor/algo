@@ -214,8 +214,8 @@ class BacktestModel:
             'initial equity': '${}'.format(gd.equity_history[0]),
             'profit': '${}'.format(profit),
             'return': '{}%'.format(round(100 * (profit / gd.equity_history[0]), 2)),
-            'max. drawdown': '{}%'.format(round(dd_stats['ddp'], 2)),
-            'longest drawdown': '{} candles'.format(dd_stats['ddl']),
+            'max. drawdown': '{}%'.format(round(dd_stats['drawdown_percent'], 2)),
+            'longest drawdown': '{} candles'.format(dd_stats['drawdown_length']),
             'gmax_idx': dd_stats['gmax_idx'],
             'gmin_idx': dd_stats['gmin_idx'],
         }
