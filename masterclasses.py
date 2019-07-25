@@ -5,7 +5,12 @@ import typing
 from dataclasses import dataclass
 from tqdm import tqdm
 
-signal_2 = typing.NamedTuple('signal_2',
+'''
+Declaring Global Scope Data Types (really just named tuples),
+but here in python, we don't really have a 'typedef' equivalent
+'''
+
+signal_tuple = typing.NamedTuple('signal_2',
                              [('action', str),
                               ('signal_str', float),
                               ('currency', str),
@@ -13,16 +18,25 @@ signal_2 = typing.NamedTuple('signal_2',
                               ('quantity', float)])
 
 
+generated_data = typing.NamedTuple('rdata',
+                                   [('price_data', dict),
+                                    ('equity_history', list),
+                                    ('signal_data', dict)])
+
+
 class Account:
     equity = 0
     cash = 0
-    # equity = cash + market value of all active holdings
-    # QUANTITY = AMOUNT IN NATIVE CURRENCY (ETH, BTC, ETC...)
-    # MKT_VALUE = WHAT THAT QUANTITY IS WORTH IN USD AT A GIVEN TIME
+    '''
+    equity = cash + market value of all active holdings
+    quantity = amount in native currency (eth, btc, etc...)
+    mkt_value = quantity's worth in USD at a given time
+    cash = cash, in USD
+    holdings = dict of currency and the amount of that currency in native terms
+    '''
 
     holdings = {}
     market_values = {}
-    # {'DOGE-USD':  20}
 
     def __init__(self):
         self.initial_capital = 1000
@@ -36,7 +50,7 @@ class Account:
     @staticmethod
     def update_market_value(signal):
         Account.market_values.update(
-            {signal['currency']: signal['price'] * Account.holdings[signal['currency']]})
+            {signal.currency: signal.price * Account.holdings[signal.currency]})
 
     @staticmethod
     def update_account_equity():
@@ -51,30 +65,33 @@ class RiskModel:
     position_sizing = .5
 
     @staticmethod
-    def get_position_size(signal_strength):
+    def get_position_size(signal_strength: float, action: str) -> float:
         # return signal_strength * (RiskModel.position_sizing * Account.equity)
-        return 5  # FUCK YOU MR. FUNCTION
+        if action == 'buy' or action == 'sell':
+            return 5  # FUCK YOU MR. FUNCTION
+        else:
+            return 0
 
 
 class ExecutionModel:
 
     @staticmethod
-    def debug(signal):
-        if signal['action'] == 'buy':
-            q1 = Account.holdings.get(signal['currency'])
-            q2 = signal['quantity']
+    def debug(signal: signal_tuple):
+        if signal.action == 'buy':
+            q1 = Account.holdings.get(signal.currency)
+            q2 = signal.quantity
             print('bought {} {} at {}. Total: '
                   '{} -> Quantity of {}: {} --> {}'
-                  .format(signal['quantity'], signal['currency'], signal['price'],
-                          signal['price'] * signal['quantity'], signal['currency'],
+                  .format(signal.quantity, signal.currency, signal.price,
+                          signal.price * signal.quantity, signal.currency,
                           q1, q1 + q2))
-        if signal['action'] == 'sell':
-            q1 = Account.holdings.get(signal['currency'])
-            tq = q1 - signal['quantity'] if signal['quantity'] < q1 else q1
+        if signal.action == 'sell':
+            q1 = Account.holdings.get(signal.currency)
+            tq = q1 - signal.quantity if signal.quantity < q1 else q1
             print('sold {} {} at {}. Total: '
                   '{} -> Quantity of {}: {} --> {}'
-                  .format(signal['quantity'], signal['currency'], signal['price'],
-                          signal['price'] * signal['quantity'], signal['currency'],
+                  .format(signal.quantity, signal.currency, signal.price,
+                          signal.price * signal.quantity, signal.currency,
                           q1, q1 - tq))
 
     @staticmethod
@@ -86,21 +103,21 @@ class ExecutionModel:
         pass
 
     @staticmethod
-    def backtest_buy(signal):
-        q1 = Account.holdings.get(signal['currency'])
-        q2 = signal['quantity']
+    def backtest_buy(signal: signal_tuple):
+        q1 = Account.holdings.get(signal.currency)
+        q2 = signal.quantity
         # ExecutionModel.debug(signal)
-        Account.holdings[signal['currency']] = q1 + q2
-        Account.cash -= q2 * signal['price']
+        Account.holdings[signal.currency] = q1 + q2
+        Account.cash -= q2 * signal.price
 
     @staticmethod
-    def backtest_sell(signal):
-        q1 = Account.holdings.get(signal['currency'])
-        q2 = signal['quantity']
+    def backtest_sell(signal: signal_tuple):
+        q1 = Account.holdings.get(signal.currency)
+        q2 = signal.quantity
         tq = q1 - q2 if q2 < q1 else q1
         # ExecutionModel.debug(signal)
-        Account.holdings[signal['currency']] = q1 - tq
-        Account.cash += tq * signal['price']
+        Account.holdings[signal.currency] = q1 - tq
+        Account.cash += tq * signal.price
 
 
 class Algorithm:
@@ -132,37 +149,20 @@ class BacktestModel:
         def get_price_dataframe(self, currency: str) -> pd.DataFrame:
             return self.price_data.get(currency)
 
-    generated_data = typing.NamedTuple('rdata',
-                                       [('price_data', dict),
-                                        ('equity_history', list),
-                                        ('signal_data', dict)])
-
     def __init__(self, algorithm):
         self.algorithm = algorithm
 
     @staticmethod
-    def debug(backtest_data):
-        for idx, val in enumerate(backtest_data):
-            if val['action'] == 'buy':
-                # print('bought at {}'.format(data.at[idx, 'close']))
-                pass
-            elif val['action'] == 'sell':
-                # print('sold at {}'.format(data.at[idx, 'close']))
-                pass
-
-    @staticmethod
     def update_quantity(signal):
         # feeds signal into risk model to get position sizing
-        signal.update({'quantity': RiskModel.get_position_size(signal['signal_str'])})
+        signal.update({'quantity': RiskModel.get_position_size(signal.signal_str)})
 
     @staticmethod
-    def execute_signal(signal):
-        if signal['action'] == 'buy':
+    def execute_signal(signal: signal_tuple):
+        if signal.action == 'buy':
             ExecutionModel.backtest_buy(signal)
-        elif signal['action'] == 'sell':
+        elif signal.action == 'sell':
             ExecutionModel.backtest_sell(signal)
-        else:
-            signal.update({'quantity': 0})
 
     def gen_backtest(self, universe: list) -> generated_data:
 
@@ -184,12 +184,16 @@ class BacktestModel:
                 sma50_series = Technicals.pandas_sma(50, data_dict[c])
                 sma20 = float(sma20_series[idx])
                 sma50 = float(sma50_series[idx])
-                signal = self.algorithm.backtest_action(short_sma=sma20,
-                                                        long_sma=sma50,
-                                                        currency=c)
-                signal.update({'currency': c})
-                signal.update({'price': float(data_dict[c].at[idx, 'close'])})
-                signal.update({'quantity': RiskModel.get_position_size(signal['signal_str'])})
+                response = self.algorithm.backtest_action(short_sma=sma20,
+                                                          long_sma=sma50,
+                                                          currency=c)
+                q = RiskModel.get_position_size(response['signal_str'], response['action'])
+                signal = signal_tuple(action=response['action'],
+                                      signal_str=response['signal_str'],
+                                      currency=c,
+                                      price=float(data_dict[c].at[idx, 'close']),
+                                      quantity=q)
+
                 self.execute_signal(signal)
                 Account.update_market_value(signal)
                 Account.update_account_equity()
@@ -197,9 +201,9 @@ class BacktestModel:
             equity = Account.equity
             equity_history.append(equity)
 
-        return self.generated_data(price_data=data_dict,
-                                   equity_history=equity_history,
-                                   signal_data=sig_dict)
+        return generated_data(price_data=data_dict,
+                              equity_history=equity_history,
+                              signal_data=sig_dict)
 
     def calc_backtest(self, gd: generated_data) -> BacktestStats:
         dd_stats = Technicals.calc_drawdown(gd.equity_history)

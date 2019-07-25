@@ -73,9 +73,9 @@ def moving_average_full_graph(default_currency: str, bs):
     ax1.set_ylabel('Price', fontsize=20)
 
     for idx, val in enumerate(signal_data):
-        if val['action'] == 'buy':
+        if val.action == 'buy':
             ax1.plot(idx, float(dataset.at[idx, 'close']), '^', color='black', markersize=10)
-        elif val['action'] == 'sell':
+        elif val.action == 'sell':
             ax1.plot(idx, float(dataset.at[idx, 'close']), 'v', color='black', markersize=10)
 
     # second box
