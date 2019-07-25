@@ -3,6 +3,8 @@ from utilities.graphing import *
 from settings import BACKTEST_CURRENCIES as UNIVERSE
 from pprint import pprint
 from threading import Thread
+import typing
+from dataclasses import dataclass
 
 
 class Account:
@@ -139,6 +141,24 @@ class Algorithm:
 
 class BacktestModel:
 
+    @dataclass
+    class BacktestStats:
+        """
+        This class ought to be instantiated prior to the calling
+        of any function where the following class variables would
+        have been passed to the function as params individually
+        """
+        price_data: dict  # dict of lists
+        signal_data: dict  # dict of lists
+        equity_history: pd.DataFrame  # dataframe
+        backtest_stats: dict  # non-nested dict: e.g. {str: int}
+
+        def get_signal_list(self, currency: str) -> list:
+            return self.signal_data.get(currency)
+
+        def get_price_dataframe(self, currency: str) -> pd.DataFrame:
+            return self.price_data.get(currency)
+
     def __init__(self, algorithm):
         self.algorithm = algorithm
 
@@ -249,7 +269,7 @@ class BacktestModel:
     # equity = Account.equity
     # account_equity.append(equity)
 
-    def calc_backtest(self, universe):
+    def gen_backtest(self, universe):
         currencies = universe
         data_dict = {}
         equity_history = []
@@ -279,11 +299,16 @@ class BacktestModel:
 
         return pd.DataFrame(data=equity_history)
 
+    def calc_backtest(self, equity_history, signal_history):
+        pass
+
+    # def graph(algorithm instance,
+
     def visualize_backtest(self, currency):
         # data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
         # backtest_data, backtest_stats = self.generate_backtest(currency)
 
-        equity_history = self.calc_backtest(UNIVERSE)
+        equity_history = self.gen_backtest(UNIVERSE)
 
         debug_graph(equity_history)
 
