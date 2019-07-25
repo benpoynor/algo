@@ -32,15 +32,14 @@ def populate_infobox(ax, display_dict, size=1):
                 family='serif')
 
 
-def moving_average_full_graph(data,  # full set of price data
-                              short_period,  # short period to plot a moving avg.
-                              long_period,   # ditto
-                              backtest_data,   # dict of arrays of data that changes over time
-                              backtest_stats,  # dict of data that's finalized once at end of backtest
-                              equity_history):
-    # set up data
-    signal_data = backtest_data['signal_data']
-    account_equity = pd.DataFrame(data=equity_history)
+def moving_average_full_graph(default_currency: str, bs):
+
+    data = bs.get_price_dataframe(default_currency)  # full set of price data
+    short_period = 20  # short period to plot a moving avg.
+    long_period = 50  # ditto
+    backtest_stats = bs.backtest_stats  # disgusting
+    equity_history = bs.equity_history
+    signal_data = bs.get_signal_list(default_currency)
 
     # setup window
     plt.subplots_adjust(left=.04, bottom=.03, right=0.99, top=0.99, wspace=0.05, hspace=0.15)
@@ -95,16 +94,16 @@ def moving_average_full_graph(data,  # full set of price data
     ax4.set_ylabel(r'$\frac{dy}{dx}(\mu \Delta$)', fontsize=20)
 
     # fifth box
-    account_equity.plot(ax=ax5)
+    equity_history.plot(ax=ax5)
     ax5.set_ylabel(r'$equity$', fontsize=20)
     ax5.set_xlabel('date')
-    gmax_idx = backtest_data.get('gmax_idx')
-    gmin_idx = backtest_data.get('gmin_idx')
+    gmax_idx = backtest_stats.get('gmax_idx')
+    gmin_idx = backtest_stats.get('gmin_idx')
 
     if gmax_idx and gmin_idx:
         ax5.fill_between([gmax_idx, gmin_idx],
-                         float(account_equity.at[gmin_idx, 0]),
-                         float(account_equity.at[gmax_idx, 0]),
+                         float(equity_history.at[gmin_idx, 0]),
+                         float(equity_history.at[gmax_idx, 0]),
                          facecolor='red',
                          alpha=.25)
 

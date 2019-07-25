@@ -336,7 +336,7 @@ class BacktestModel:
         gd = self.gen_backtest(UNIVERSE)
         bs = self.calc_backtest(gd)
 
-        debug_graph(bs.equity_history)
+        moving_average_full_graph('ETH-USD', bs)
 
         # moving_average_full_graph(data=data,
         #                           short_period=20,
