@@ -1,8 +1,6 @@
 from utilities.filehandler import FileHandler
 from utilities.graphing import *
 from settings import BACKTEST_CURRENCIES as UNIVERSE
-from pprint import pprint
-from threading import Thread
 import typing
 from dataclasses import dataclass
 
@@ -201,79 +199,6 @@ class BacktestModel:
         else:
             signal.update({'quantity': 0})
 
-    def generate_backtest(self, currency):  # OLD
-        data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(currency)))
-        backtest_data = {}
-        signal_data = []
-        account_equity = []
-        initial_equity = Account.equity
-        equity = 0
-
-        for i in range(len(data)):
-            sma20_series = Technicals.pandas_sma(20, data)
-            sma50_series = Technicals.pandas_sma(50, data)
-            sma20 = float(sma20_series[i])
-            sma50 = float(sma50_series[i])
-            signal = self.algorithm.backtest_action(short_sma=sma20,
-                                                    long_sma=sma50)
-
-            signal.update({'currency': currency})
-            self.update_quantity(signal)
-            self.execute_on_signal(signal, float(data.at[i, 'close']))
-
-            Account.update_mkt(currency=currency,
-                               price=float(data.at[i, 'close']))
-            Account.update_equity()
-            equity = Account.equity
-            signal_data.append(signal)
-            account_equity.append(equity)
-
-        dd_stats = Technicals.calc_drawdown(account_equity)
-        backtest_data.update({'signal_data': signal_data,
-                              'account_equity': account_equity,
-                              'gmax_idx': dd_stats['gmax_idx'],
-                              'gmin_idx': dd_stats['gmin_idx'],
-                              })
-        profit = round(equity - initial_equity, 2)
-
-        backtest_stats = {
-            'initial equity': '${}'.format(initial_equity),
-            'profit': '${}'.format(profit),
-            'return': '{}%'.format(round(100 * (profit / initial_equity), 2)),
-            'max. drawdown': '{}%'.format(round(dd_stats['ddp'], 2)),
-            'longest drawdown': '{} candles'.format(dd_stats['ddl'])
-        }
-        return backtest_data, backtest_stats
-
-    # def visualize_backtest(self, currency):
-    #     data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
-    #     backtest_data, backtest_stats = self.generate_backtest(currency)
-    #
-    #     moving_average_full_graph(data=data,
-    #                               short_period=20,
-    #                               long_period=50,
-    #                               backtest_data=backtest_data,
-    #                               backtest_stats=backtest_stats)
-
-    def get_individual_signal(self, currency, data, idx):
-        sma20_series = Technicals.pandas_sma(20, data)
-        sma50_series = Technicals.pandas_sma(50, data)
-        sma20 = float(sma20_series[idx])
-        sma50 = float(sma50_series[idx])
-        signal = self.algorithm.backtest_action(short_sma=sma20,
-                                                long_sma=sma50)
-
-        signal.update({'currency': currency})
-        signal.update({'price_at_signal': float(data.at[idx, 'close'])})
-        self.update_quantity(signal)
-        return signal
-
-    # self.execute_on_signal_v2(signal)
-    # Account.update_mkt_v2(signal)
-    # Account.update_equity()
-    # equity = Account.equity
-    # account_equity.append(equity)
-
     def gen_backtest(self, universe: list) -> generated_data:
 
         currencies = universe
@@ -330,24 +255,8 @@ class BacktestModel:
                                   backtest_stats=backtest_stats)
 
     def visualize_backtest(self, currency):
-        # data = FileHandler.read_from_file(FileHandler.get_filestring(currency))
-        # backtest_data, backtest_stats = self.generate_backtest(currency)
 
         gd = self.gen_backtest(UNIVERSE)
         bs = self.calc_backtest(gd)
 
-        moving_average_full_graph('ETH-USD', bs)
-
-        # moving_average_full_graph(data=data,
-        #                           short_period=20,
-        #                           long_period=50,
-        #                           backtest_data=backtest_data,
-        #                           backtest_stats=backtest_stats,
-        #                           equity_history=equity_history)
-
-    # def full_backest(self, universe):
-    #     results_dict = {}
-    #     for currency in universe:
-    #         self.visualize_backtest(currency)
-    #         results_dict.update({currency: self.account.equity})
-    #     pprint(results_dict)
+        moving_average_full_graph(currency, bs)
