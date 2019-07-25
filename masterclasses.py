@@ -62,13 +62,15 @@ class Account:
 
 
 class RiskModel:
-    position_sizing = .5
+    position_sizing = .1
 
     @staticmethod
-    def get_position_size(signal_strength: float, action: str) -> float:
-        # return signal_strength * (RiskModel.position_sizing * Account.equity)
+    def get_position_size(signal_strength: float,
+                          action: str,
+                          price: float) -> float:
         if action == 'buy' or action == 'sell':
-            return 5  # FUCK YOU MR. FUNCTION
+            usd_position_size = signal_strength * (RiskModel.position_sizing * Account.equity)
+            return usd_position_size / price
         else:
             return 0
 
@@ -81,7 +83,7 @@ class ExecutionModel:
             q1 = Account.holdings.get(signal.currency)
             q2 = signal.quantity
             print('bought {} {} at {}. Total: '
-                  '{} -> Quantity of {}: {} --> {}'
+                  '${} -> Quantity of {}: {} --> {}'
                   .format(signal.quantity, signal.currency, signal.price,
                           signal.price * signal.quantity, signal.currency,
                           q1, q1 + q2))
@@ -89,7 +91,7 @@ class ExecutionModel:
             q1 = Account.holdings.get(signal.currency)
             tq = q1 - signal.quantity if signal.quantity < q1 else q1
             print('sold {} {} at {}. Total: '
-                  '{} -> Quantity of {}: {} --> {}'
+                  '${} -> Quantity of {}: {} --> {}'
                   .format(signal.quantity, signal.currency, signal.price,
                           signal.price * signal.quantity, signal.currency,
                           q1, q1 - tq))
@@ -106,7 +108,7 @@ class ExecutionModel:
     def backtest_buy(signal: signal_tuple):
         q1 = Account.holdings.get(signal.currency)
         q2 = signal.quantity
-        # ExecutionModel.debug(signal)
+        ExecutionModel.debug(signal)
         Account.holdings[signal.currency] = q1 + q2
         Account.cash -= q2 * signal.price
 
@@ -115,7 +117,7 @@ class ExecutionModel:
         q1 = Account.holdings.get(signal.currency)
         q2 = signal.quantity
         tq = q1 - q2 if q2 < q1 else q1
-        # ExecutionModel.debug(signal)
+        ExecutionModel.debug(signal)
         Account.holdings[signal.currency] = q1 - tq
         Account.cash += tq * signal.price
 
@@ -153,11 +155,6 @@ class BacktestModel:
         self.algorithm = algorithm
 
     @staticmethod
-    def update_quantity(signal):
-        # feeds signal into risk model to get position sizing
-        signal.update({'quantity': RiskModel.get_position_size(signal.signal_str)})
-
-    @staticmethod
     def execute_signal(signal: signal_tuple):
         if signal.action == 'buy':
             ExecutionModel.backtest_buy(signal)
@@ -187,7 +184,10 @@ class BacktestModel:
                 response = self.algorithm.backtest_action(short_sma=sma20,
                                                           long_sma=sma50,
                                                           currency=c)
-                q = RiskModel.get_position_size(response['signal_str'], response['action'])
+                q = RiskModel.get_position_size(response['signal_str'],
+                                                response['action'],
+                                                float(data_dict[c].at[idx, 'close']))
+
                 signal = signal_tuple(action=response['action'],
                                       signal_str=response['signal_str'],
                                       currency=c,
