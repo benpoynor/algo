@@ -4,3 +4,4 @@ numpy
 mpl_finance
 pprint
 yahoofinancials
+tqdm

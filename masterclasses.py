@@ -3,6 +3,14 @@ from utilities.graphing import *
 from settings import BACKTEST_CURRENCIES as UNIVERSE
 import typing
 from dataclasses import dataclass
+from tqdm import tqdm
+
+signal_2 = typing.NamedTuple('signal_2',
+                             [('action', str),
+                              ('signal_str', float),
+                              ('currency', str),
+                              ('price', float),
+                              ('quantity', float)])
 
 
 class Account:
@@ -26,25 +34,12 @@ class Account:
             Account.market_values.update({c: 0})
 
     @staticmethod
-    def update_mkt(currency, price):
-        c = Account.holdings.get(currency)
-        c.update({'mkt_value': price * c['quantity']})
-
-    @staticmethod
-    def update_mkt_v2(signal):
+    def update_market_value(signal):
         Account.market_values.update(
             {signal['currency']: signal['price'] * Account.holdings[signal['currency']]})
 
     @staticmethod
-    def update_equity():
-        sum_mkt = 0
-        for k, v in Account.holdings.items():
-            sum_mkt += v['mkt_value']
-
-        Account.equity = Account.cash + sum_mkt
-
-    @staticmethod
-    def update_equity_v2():
+    def update_account_equity():
         sum_mkt = 0
         for v in Account.market_values.values():
             sum_mkt += v
@@ -91,27 +86,7 @@ class ExecutionModel:
         pass
 
     @staticmethod
-    def backtest_buy(signal, price):
-        c = Account.holdings.get(signal['currency'])
-        q1 = c.get('quantity')
-        q2 = signal['quantity']
-        c.update({'quantity': q1 + q2})
-        Account.cash -= q2 * price
-
-    @staticmethod
-    def backtest_sell(signal, price):
-        c = Account.holdings.get(signal['currency'])
-        q1 = c.get('quantity')
-        q2 = signal['quantity']
-        if q2 < q1:
-            tq = q1 - q2
-        else:
-            tq = q1
-        c.update({'quantity': q1 - tq})
-        Account.cash += tq * price
-
-    @staticmethod
-    def backtest_buy_v2(signal):
+    def backtest_buy(signal):
         q1 = Account.holdings.get(signal['currency'])
         q2 = signal['quantity']
         # ExecutionModel.debug(signal)
@@ -119,7 +94,7 @@ class ExecutionModel:
         Account.cash -= q2 * signal['price']
 
     @staticmethod
-    def backtest_sell_v2(signal):
+    def backtest_sell(signal):
         q1 = Account.holdings.get(signal['currency'])
         q2 = signal['quantity']
         tq = q1 - q2 if q2 < q1 else q1
@@ -181,21 +156,11 @@ class BacktestModel:
         signal.update({'quantity': RiskModel.get_position_size(signal['signal_str'])})
 
     @staticmethod
-    def execute_on_signal(signal, price):
-        # feeds the signal into execution model to simulate buying and selling
+    def execute_signal(signal):
         if signal['action'] == 'buy':
-            ExecutionModel.backtest_buy(signal, price)
+            ExecutionModel.backtest_buy(signal)
         elif signal['action'] == 'sell':
-            ExecutionModel.backtest_sell(signal, price)
-        else:
-            signal.update({'quantity': 0})
-
-    @staticmethod
-    def execute_on_signal_v2(signal):
-        if signal['action'] == 'buy':
-            ExecutionModel.backtest_buy_v2(signal)
-        elif signal['action'] == 'sell':
-            ExecutionModel.backtest_sell_v2(signal)
+            ExecutionModel.backtest_sell(signal)
         else:
             signal.update({'quantity': 0})
 
@@ -212,7 +177,8 @@ class BacktestModel:
             data_dict.update({c: data})
             sig_dict.update({c: []})
 
-        for idx in range(len(data)):
+        print('generating backtest values...')
+        for idx in tqdm(range(len(data))):
             for c in currencies:
                 sma20_series = Technicals.pandas_sma(20, data_dict[c])
                 sma50_series = Technicals.pandas_sma(50, data_dict[c])
@@ -224,9 +190,9 @@ class BacktestModel:
                 signal.update({'currency': c})
                 signal.update({'price': float(data_dict[c].at[idx, 'close'])})
                 signal.update({'quantity': RiskModel.get_position_size(signal['signal_str'])})
-                self.execute_on_signal_v2(signal)
-                Account.update_mkt_v2(signal)
-                Account.update_equity_v2()
+                self.execute_signal(signal)
+                Account.update_market_value(signal)
+                Account.update_account_equity()
                 sig_dict.get(c).append(signal)
             equity = Account.equity
             equity_history.append(equity)
