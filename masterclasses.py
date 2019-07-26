@@ -15,7 +15,8 @@ signal_tuple = typing.NamedTuple('signal_2',
                               ('signal_str', float),
                               ('currency', str),
                               ('price', float),
-                              ('quantity', float)])
+                              ('quantity', float),
+                              ('liquidate', bool)])
 
 
 generated_data = typing.NamedTuple('rdata',
@@ -68,6 +69,7 @@ class RiskModel:
     def get_position_size(signal_strength: float,
                           action: str,
                           price: float) -> float:
+
         if action == 'buy' or action == 'sell':
             usd_position_size = signal_strength * (RiskModel.position_sizing * Account.equity)
             return usd_position_size / price
@@ -121,6 +123,13 @@ class ExecutionModel:
         Account.holdings[signal.currency] = q1 - tq
         Account.cash += tq * signal.price
 
+    @staticmethod
+    def backtest_liquidate(signal: signal_tuple):
+        q1 = Account.holdings.get(signal.currency)
+        ExecutionModel.debug(signal)
+        Account.holdings[signal.currency] = 0
+        Account.cash += q1 * signal.price
+
 
 class Algorithm:
     # index here just means date
@@ -156,7 +165,9 @@ class BacktestModel:
 
     @staticmethod
     def execute_signal(signal: signal_tuple):
-        if signal.action == 'buy':
+        if signal.liquidate:
+            ExecutionModel.backtest_liquidate(signal)
+        elif signal.action == 'buy':
             ExecutionModel.backtest_buy(signal)
         elif signal.action == 'sell':
             ExecutionModel.backtest_sell(signal)
@@ -184,15 +195,17 @@ class BacktestModel:
                 response = self.algorithm.backtest_action(short_sma=sma20,
                                                           long_sma=sma50,
                                                           currency=c)
-                q = RiskModel.get_position_size(response['signal_str'],
-                                                response['action'],
-                                                float(data_dict[c].at[idx, 'close']))
+
+                q = RiskModel.get_position_size(signal_strength=response['signal_str'],
+                                                action=response['action'],
+                                                price=float(data_dict[c].at[idx, 'close']))
 
                 signal = signal_tuple(action=response['action'],
                                       signal_str=response['signal_str'],
                                       currency=c,
                                       price=float(data_dict[c].at[idx, 'close']),
-                                      quantity=q)
+                                      quantity=q,
+                                      liquidate=response['liquidate'])
 
                 self.execute_signal(signal)
                 Account.update_market_value(signal)

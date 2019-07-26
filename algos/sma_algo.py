@@ -14,10 +14,12 @@ class MovingAverageAlgo(Algorithm):
                 # self.execution_model.backtest_buy(price, index)
                 self.positions.update({currency: True})
                 return {'action': 'buy',
-                        'signal_str': 1}
+                        'signal_str': 1,
+                        'liquidate': False}
             else:
                 return {'action': 'pass',
-                        'signal_str': 1}
+                        'signal_str': 1,
+                        'liquidate': False}
 
         elif short_sma < long_sma:
             if self.positions.get(currency):
@@ -25,13 +27,16 @@ class MovingAverageAlgo(Algorithm):
                 # self.execution_model.backtest_sell(price, index)
                 self.positions.update({currency: False})
                 return {'action': 'sell',
-                        'signal_str': 1}
+                        'signal_str': 1,
+                        'liquidate': False}
             else:
                 return {'action': 'pass',
-                        'signal_str': 1}
+                        'signal_str': 1,
+                        'liquidate': False}
         else:
             return {'action': 'pass',
-                    'signal_str': 1}
+                    'signal_str': 1,
+                    'liquidate': False}
 
     def action(self):
         pass
