@@ -76,6 +76,16 @@ class RiskModel:
         else:
             return 0
 
+    @staticmethod
+    def check_stops(profit_loss: int) -> bool:
+        # if profit_loss < .05:
+        #     return True
+        # elif profit_loss > 1:
+        #     return True
+        # else:
+        #     return False
+        return False
+
 
 class ExecutionModel:
 
@@ -97,6 +107,11 @@ class ExecutionModel:
                   .format(signal.quantity, signal.currency, signal.price,
                           signal.price * signal.quantity, signal.currency,
                           q1, q1 - tq))
+        if signal.liquidate:
+            q1 = Account.holdings.get(signal.currency)
+            print('STOP TRIGGERED: DUMPING {} {} FOR {}'.format(
+                q1, signal.currency, q1 * signal.price
+            ))
 
     @staticmethod
     def limit_buy(price, currency, time_limit):
@@ -133,7 +148,7 @@ class ExecutionModel:
 
 class Algorithm:
     # index here just means date
-    def backtest_action(self, short_sma, long_sma, currency):
+    def backtest_action(self, short_sma: int, long_sma: int, currency: str) -> dict:
         raise NotImplementedError
 
     def action(self):
@@ -172,6 +187,16 @@ class BacktestModel:
         elif signal.action == 'sell':
             ExecutionModel.backtest_sell(signal)
 
+    @staticmethod
+    def get_last_entry_price(signal_data: list) -> float:
+        x = list(item for item in signal_data if item.action == 'buy')
+        return x[-1].price if x else 0
+
+    @staticmethod
+    def get_profit_loss(last_entry_price: float,
+                        current_price: float) -> float:
+        return (current_price - last_entry_price) / last_entry_price
+
     def gen_backtest(self, universe: list) -> generated_data:
 
         currencies = universe
@@ -188,24 +213,31 @@ class BacktestModel:
         print('generating backtest values...')
         for idx in tqdm(range(len(data))):
             for c in currencies:
-                sma20_series = Technicals.pandas_sma(20, data_dict[c])
-                sma50_series = Technicals.pandas_sma(50, data_dict[c])
-                sma20 = float(sma20_series[idx])
-                sma50 = float(sma50_series[idx])
+                short_sma_series = Technicals.pandas_sma(10, data_dict[c])
+                long_sma_series = Technicals.pandas_sma(15, data_dict[c])
+                sma20 = float(short_sma_series[idx])
+                sma50 = float(long_sma_series[idx])
+                price = float(data_dict[c].at[idx, 'close'])
+                profit_loss = 0
+                last_entry_price = self.get_last_entry_price(sig_dict[c])
+                if last_entry_price:
+                    profit_loss = self.get_profit_loss(last_entry_price=last_entry_price,
+                                                       current_price=price)
+
                 response = self.algorithm.backtest_action(short_sma=sma20,
                                                           long_sma=sma50,
                                                           currency=c)
 
                 q = RiskModel.get_position_size(signal_strength=response['signal_str'],
                                                 action=response['action'],
-                                                price=float(data_dict[c].at[idx, 'close']))
+                                                price=price)
 
                 signal = signal_tuple(action=response['action'],
                                       signal_str=response['signal_str'],
                                       currency=c,
-                                      price=float(data_dict[c].at[idx, 'close']),
+                                      price=price,
                                       quantity=q,
-                                      liquidate=response['liquidate'])
+                                      liquidate=RiskModel.check_stops(profit_loss))
 
                 self.execute_signal(signal)
                 Account.update_market_value(signal)

@@ -35,8 +35,8 @@ def populate_infobox(ax, display_dict, size=1):
 def moving_average_full_graph(default_currency: str, bs):
 
     data = bs.get_price_dataframe(default_currency)  # full set of price data
-    short_period = 20  # short period to plot a moving avg.
-    long_period = 50  # ditto
+    short_period = 10  # short period to plot a moving avg.
+    long_period = 15  # ditto
     backtest_stats = bs.backtest_stats  # disgusting
     equity_history = bs.equity_history
     signal_data = bs.get_signal_list(default_currency)
