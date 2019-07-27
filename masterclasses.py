@@ -1,6 +1,7 @@
 from utilities.filehandler import FileHandler
 from utilities.graphing import *
 from settings import BACKTEST_CURRENCIES as UNIVERSE
+from settings import DEBUG
 import typing
 from dataclasses import dataclass
 from tqdm import tqdm
@@ -40,7 +41,7 @@ class Account:
     market_values = {}
 
     def __init__(self):
-        self.initial_capital = 1000
+        self.initial_capital = 10000
         Account.equity = self.initial_capital
         Account.cash = Account.equity
 
@@ -77,14 +78,14 @@ class RiskModel:
             return 0
 
     @staticmethod
-    def check_stops(profit_loss: int) -> bool:
-        # if profit_loss < .05:
-        #     return True
-        # elif profit_loss > 1:
-        #     return True
-        # else:
-        #     return False
-        return False
+    def check_stops(profit_loss: float, currency: str) -> bool:
+        if Account.holdings.get(currency) > 0:
+            if profit_loss < -.05:
+                return True
+            elif profit_loss > .25:
+                return True
+        else:
+            return False
 
 
 class ExecutionModel:
@@ -125,7 +126,8 @@ class ExecutionModel:
     def backtest_buy(signal: signal_tuple):
         q1 = Account.holdings.get(signal.currency)
         q2 = signal.quantity
-        ExecutionModel.debug(signal)
+        if DEBUG:
+            ExecutionModel.debug(signal)
         Account.holdings[signal.currency] = q1 + q2
         Account.cash -= q2 * signal.price
 
@@ -134,14 +136,16 @@ class ExecutionModel:
         q1 = Account.holdings.get(signal.currency)
         q2 = signal.quantity
         tq = q1 - q2 if q2 < q1 else q1
-        ExecutionModel.debug(signal)
+        if DEBUG:
+            ExecutionModel.debug(signal)
         Account.holdings[signal.currency] = q1 - tq
         Account.cash += tq * signal.price
 
     @staticmethod
     def backtest_liquidate(signal: signal_tuple):
         q1 = Account.holdings.get(signal.currency)
-        ExecutionModel.debug(signal)
+        if DEBUG:
+            ExecutionModel.debug(signal)
         Account.holdings[signal.currency] = 0
         Account.cash += q1 * signal.price
 
@@ -195,6 +199,8 @@ class BacktestModel:
     @staticmethod
     def get_profit_loss(last_entry_price: float,
                         current_price: float) -> float:
+        if not last_entry_price:
+            return 0
         return (current_price - last_entry_price) / last_entry_price
 
     def gen_backtest(self, universe: list) -> generated_data:
@@ -218,11 +224,9 @@ class BacktestModel:
                 sma20 = float(short_sma_series[idx])
                 sma50 = float(long_sma_series[idx])
                 price = float(data_dict[c].at[idx, 'close'])
-                profit_loss = 0
                 last_entry_price = self.get_last_entry_price(sig_dict[c])
-                if last_entry_price:
-                    profit_loss = self.get_profit_loss(last_entry_price=last_entry_price,
-                                                       current_price=price)
+                profit_loss = self.get_profit_loss(last_entry_price=last_entry_price,
+                                                   current_price=price)
 
                 response = self.algorithm.backtest_action(short_sma=sma20,
                                                           long_sma=sma50,
@@ -237,7 +241,7 @@ class BacktestModel:
                                       currency=c,
                                       price=price,
                                       quantity=q,
-                                      liquidate=RiskModel.check_stops(profit_loss))
+                                      liquidate=RiskModel.check_stops(profit_loss, c))
 
                 self.execute_signal(signal)
                 Account.update_market_value(signal)
