@@ -209,7 +209,6 @@ class BacktestModel:
         data_dict = {}
         sig_dict = {}
         equity_history = []
-        return_history = []
         data = None
 
         for c in currencies:
@@ -219,7 +218,6 @@ class BacktestModel:
 
         print('generating backtest values...')
         for idx in tqdm(range(len(data))):
-            prev_eq = Account.equity
             for c in currencies:
                 short_sma_series = Technicals.pandas_sma(settings.SHORT_SMA_PERIOD, data_dict[c])
                 long_sma_series = Technicals.pandas_sma(settings.LONG_SMA_PERIOD, data_dict[c])
@@ -250,8 +248,6 @@ class BacktestModel:
                 Account.update_account_equity()
                 sig_dict.get(c).append(signal)
             equity = Account.equity
-            r = (equity - prev_eq) / prev_eq
-            return_history.append(r)
             equity_history.append(equity)
 
         return generated_data(price_data=data_dict,
