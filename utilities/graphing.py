@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_finance import candlestick2_ochl
 from utilities.technicals import Technicals
 import numpy as np
+import settings
 
 
 def add_titlebox(ax, text):
@@ -35,8 +36,8 @@ def populate_infobox(ax, display_dict, size=1):
 def moving_average_full_graph(default_currency: str, bs):
 
     data = bs.get_price_dataframe(default_currency)  # full set of price data
-    short_period = 10  # short period to plot a moving avg.
-    long_period = 15  # ditto
+    short_period = settings.SHORT_SMA_PERIOD  # short period to plot a moving avg.
+    long_period = settings.LONG_SMA_PERIOD  # ditto
     backtest_stats = bs.backtest_stats  # disgusting
     equity_history = bs.equity_history
     signal_data = bs.get_signal_list(default_currency)
@@ -124,7 +125,7 @@ def moving_average_full_graph(default_currency: str, bs):
 
 
 def debug_graph(equity_history):
-    ax1 = plt.subplot2grid((1,1), (0, 0))
+    ax1 = plt.subplot2grid((1, 1), (0, 0))
     equity_history.plot(ax=ax1)
     mng = plt.get_current_fig_manager()
     mng.resize(*mng.window.maxsize())

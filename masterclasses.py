@@ -1,10 +1,10 @@
 from utilities.filehandler import FileHandler
 from utilities.graphing import *
-from settings import BACKTEST_CURRENCIES as UNIVERSE
-from settings import DEBUG
+import settings
 import typing
 from dataclasses import dataclass
 from tqdm import tqdm
+import statistics
 
 '''
 Declaring Global Scope Data Types (really just named tuples),
@@ -23,7 +23,8 @@ signal_tuple = typing.NamedTuple('signal_2',
 generated_data = typing.NamedTuple('rdata',
                                    [('price_data', dict),
                                     ('equity_history', list),
-                                    ('signal_data', dict)])
+                                    ('signal_data', dict),
+                                    ('return_history', list)])
 
 
 class Account:
@@ -45,7 +46,7 @@ class Account:
         Account.equity = self.initial_capital
         Account.cash = Account.equity
 
-        for c in UNIVERSE:
+        for c in settings.BACKTEST_CURRENCIES:
             Account.holdings.update({c: 0})
             Account.market_values.update({c: 0})
 
@@ -126,7 +127,7 @@ class ExecutionModel:
     def backtest_buy(signal: signal_tuple):
         q1 = Account.holdings.get(signal.currency)
         q2 = signal.quantity
-        if DEBUG:
+        if settings.DEBUG:
             ExecutionModel.debug(signal)
         Account.holdings[signal.currency] = q1 + q2
         Account.cash -= q2 * signal.price
@@ -136,7 +137,7 @@ class ExecutionModel:
         q1 = Account.holdings.get(signal.currency)
         q2 = signal.quantity
         tq = q1 - q2 if q2 < q1 else q1
-        if DEBUG:
+        if settings.DEBUG:
             ExecutionModel.debug(signal)
         Account.holdings[signal.currency] = q1 - tq
         Account.cash += tq * signal.price
@@ -144,7 +145,7 @@ class ExecutionModel:
     @staticmethod
     def backtest_liquidate(signal: signal_tuple):
         q1 = Account.holdings.get(signal.currency)
-        if DEBUG:
+        if settings.DEBUG:
             ExecutionModel.debug(signal)
         Account.holdings[signal.currency] = 0
         Account.cash += q1 * signal.price
@@ -209,6 +210,7 @@ class BacktestModel:
         data_dict = {}
         sig_dict = {}
         equity_history = []
+        return_history = []
         data = None
 
         for c in currencies:
@@ -218,9 +220,10 @@ class BacktestModel:
 
         print('generating backtest values...')
         for idx in tqdm(range(len(data))):
+            prev_eq = Account.equity
             for c in currencies:
-                short_sma_series = Technicals.pandas_sma(10, data_dict[c])
-                long_sma_series = Technicals.pandas_sma(15, data_dict[c])
+                short_sma_series = Technicals.pandas_sma(settings.SHORT_SMA_PERIOD, data_dict[c])
+                long_sma_series = Technicals.pandas_sma(settings.LONG_SMA_PERIOD, data_dict[c])
                 sma20 = float(short_sma_series[idx])
                 sma50 = float(long_sma_series[idx])
                 price = float(data_dict[c].at[idx, 'close'])
@@ -248,21 +251,38 @@ class BacktestModel:
                 Account.update_account_equity()
                 sig_dict.get(c).append(signal)
             equity = Account.equity
+            r = (equity - prev_eq) / prev_eq
+            return_history.append(r)
             equity_history.append(equity)
 
         return generated_data(price_data=data_dict,
                               equity_history=equity_history,
-                              signal_data=sig_dict)
+                              signal_data=sig_dict,
+                              return_history=return_history)
 
     def calc_backtest(self, gd: generated_data) -> BacktestStats:
         dd_stats = Technicals.calc_drawdown(gd.equity_history)
 
-        profit = round(gd.equity_history[-1] - gd.equity_history[0], 2)
+        profit = gd.equity_history[-1] - gd.equity_history[0]
+        returns = 100 * (profit / gd.equity_history[0])
+        periods = []
+        for d in gd.price_data:
+            periods.append(len(gd.price_data.get(d)))
+        periods_tested = int(round(statistics.mean(periods)))
+        annualized_return = returns / (periods_tested / settings.CPY)
 
+        sharpe = Technicals.calc_sharpe(annualized_return=annualized_return / 100,
+                                        returns=gd.return_history)
         backtest_stats = {
+            'period type': '{}'.format(settings.CURRENT_PERIOD_SETTING),
             'initial equity': '${}'.format(gd.equity_history[0]),
-            'profit': '${}'.format(profit),
-            'return': '{}%'.format(round(100 * (profit / gd.equity_history[0]), 2)),
+            'profit': '${}'.format(round(profit, 2)),
+            'return': '{}%'.format(round(returns, 2)),
+            'sharpe': '{}'.format(round(sharpe, 5)),
+            'annualized returns': '{}%'.format(round(annualized_return, 2)),
+            'average {} return'.
+            format(settings.CURRENT_PERIOD_SETTING): '{}%'.
+            format(round(returns / periods_tested, 5)),
             'max. drawdown': '{}%'.format(round(dd_stats['drawdown_percent'], 2)),
             'longest drawdown': '{} candles'.format(dd_stats['drawdown_length']),
             'gmax_idx': dd_stats['gmax_idx'],
@@ -275,7 +295,7 @@ class BacktestModel:
 
     def visualize_backtest(self, currency):
 
-        gd = self.gen_backtest(UNIVERSE)
+        gd = self.gen_backtest(settings.BACKTEST_CURRENCIES)
         bs = self.calc_backtest(gd)
 
         moving_average_full_graph(currency, bs)

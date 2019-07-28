@@ -1,4 +1,5 @@
 import pandas as pd
+import settings
 
 
 class Technicals:
@@ -60,4 +61,12 @@ class Technicals:
 
         return drawdown_stats
 
-    # TODO: Make sure the datasets remain lined up after calculating dydx
+    @staticmethod
+    def calc_sharpe(returns: list or pd.DataFrame,
+                    annualized_return: float) -> float:
+        if type(returns) is list:
+            returns = pd.DataFrame(returns)
+        rf = settings.RISK_FREE_RATE
+        rp = annualized_return
+        std = returns.std()
+        return float((rp - rf) / std)
