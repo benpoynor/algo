@@ -23,8 +23,7 @@ signal_tuple = typing.NamedTuple('signal_2',
 generated_data = typing.NamedTuple('rdata',
                                    [('price_data', dict),
                                     ('equity_history', list),
-                                    ('signal_data', dict),
-                                    ('return_history', list)])
+                                    ('signal_data', dict)])
 
 
 class Account:
@@ -257,8 +256,7 @@ class BacktestModel:
 
         return generated_data(price_data=data_dict,
                               equity_history=equity_history,
-                              signal_data=sig_dict,
-                              return_history=return_history)
+                              signal_data=sig_dict)
 
     def calc_backtest(self, gd: generated_data) -> BacktestStats:
         dd_stats = Technicals.calc_drawdown(gd.equity_history)
@@ -271,8 +269,9 @@ class BacktestModel:
         periods_tested = int(round(statistics.mean(periods)))
         annualized_return = returns / (periods_tested / settings.CPY)
 
-        sharpe = Technicals.calc_sharpe(annualized_return=annualized_return / 100,
-                                        returns=gd.return_history)
+        stddev = ((10000 + pd.DataFrame(gd.equity_history).std()) - 10000) / 10000
+
+        sharpe = Technicals.calc_sharpe(annualized_return=annualized_return / 100, std=stddev)
         backtest_stats = {
             'period type': '{}'.format(settings.CURRENT_PERIOD_SETTING),
             'initial equity': '${}'.format(gd.equity_history[0]),

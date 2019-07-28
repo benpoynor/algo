@@ -62,11 +62,8 @@ class Technicals:
         return drawdown_stats
 
     @staticmethod
-    def calc_sharpe(returns: list or pd.DataFrame,
+    def calc_sharpe(std: float,
                     annualized_return: float) -> float:
-        if type(returns) is list:
-            returns = pd.DataFrame(returns)
         rf = settings.RISK_FREE_RATE
         rp = annualized_return
-        std = returns.std()
         return float((rp - rf) / std)
