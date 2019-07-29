@@ -11,24 +11,16 @@ Declaring Global Scope Data Types (really just named tuples),
 but here in python, we don't really have a 'typedef' equivalent
 '''
 
-signal_tuple = typing.NamedTuple('signal_2',
-                             [('action', str),
-                              ('signal_str', float),
-                              ('currency', str),
-                              ('price', float),
-                              ('quantity', float),
-                              ('liquidate', bool)])
+signal_tuple = typing.NamedTuple('signal_2', [('action', str), ('signal_str', float), ('currency', str),
+                                 ('price', float), ('quantity', float), ('liquidate', bool)])
 
-
-generated_data = typing.NamedTuple('rdata',
-                                   [('price_data', dict),
-                                    ('equity_history', list),
-                                    ('signal_data', dict)])
+generated_data = typing.NamedTuple('rdata', [('price_data', dict), ('equity_history', list), ('signal_data', dict)])
 
 
 class Account:
     equity = 0
     cash = 0
+    trades = {'buys': 0, 'sells': 0}
     '''
     equity = cash + market value of all active holdings
     quantity = amount in native currency (eth, btc, etc...)
@@ -41,7 +33,7 @@ class Account:
     market_values = {}
 
     def __init__(self):
-        self.initial_capital = 10000
+        self.initial_capital = settings.STARTING_CAPITAL
         Account.equity = self.initial_capital
         Account.cash = Account.equity
 
@@ -130,6 +122,7 @@ class ExecutionModel:
             ExecutionModel.debug(signal)
         Account.holdings[signal.currency] = q1 + q2
         Account.cash -= q2 * signal.price
+        Account.trades.update({'buys': Account.trades.get('buys') + 1})
 
     @staticmethod
     def backtest_sell(signal: signal_tuple):
@@ -140,14 +133,18 @@ class ExecutionModel:
             ExecutionModel.debug(signal)
         Account.holdings[signal.currency] = q1 - tq
         Account.cash += tq * signal.price
+        if q1 > 0:
+            Account.trades.update({'sells': Account.trades.get('sells') + 1})
 
     @staticmethod
     def backtest_liquidate(signal: signal_tuple):
         q1 = Account.holdings.get(signal.currency)
-        if settings.DEBUG:
-            ExecutionModel.debug(signal)
-        Account.holdings[signal.currency] = 0
-        Account.cash += q1 * signal.price
+        if q1 > 0:
+            if settings.DEBUG:
+                ExecutionModel.debug(signal)
+            Account.holdings[signal.currency] = 0
+            Account.cash += q1 * signal.price
+            Account.trades.update({'sells': Account.trades.get('sells') + 1})
 
 
 class Algorithm:
@@ -259,21 +256,39 @@ class BacktestModel:
 
         profit = gd.equity_history[-1] - gd.equity_history[0]
         returns = 100 * (profit / gd.equity_history[0])
-        periods = []
-        for d in gd.price_data:
-            periods.append(len(gd.price_data.get(d)))
+
+        periods = list(len(gd.price_data.get(d)) for d in gd.price_data)
+
+        transaction_quantities = []
+        for c in settings.BACKTEST_CURRENCIES:
+            transaction_quantities += list(item.quantity * item.price for item in gd.signal_data.get(c)
+                                           if (item.action == 'buy'
+                                               or item.action == 'sell'
+                                               or item.liquidate)
+                                           and item.quantity > 0)
+
         periods_tested = int(round(statistics.mean(periods)))
         annualized_return = returns / (periods_tested / settings.CPY)
-
-        stddev = ((10000 + pd.DataFrame(gd.equity_history).std()) - 10000) / 10000
-
+        mean_trade_size = round(statistics.mean(transaction_quantities), 2)
+        total_trades = int(Account.trades.get('buys')) + Account.trades.get('sells')
+        stddev = ((settings.STARTING_CAPITAL + pd.DataFrame(gd.equity_history).std())
+                  - settings.STARTING_CAPITAL) / settings.STARTING_CAPITAL
         sharpe = Technicals.calc_sharpe(annualized_return=annualized_return / 100, std=stddev)
+        fee_total = round((mean_trade_size * total_trades) * settings.FEE_SCHEDULE, 2)
+
         backtest_stats = {
             'period type': '{}'.format(settings.CURRENT_PERIOD_SETTING),
             'initial equity': '${}'.format(gd.equity_history[0]),
             'profit': '${}'.format(round(profit, 2)),
             'return': '{}%'.format(round(returns, 2)),
             'sharpe': '{}'.format(round(sharpe, 5)),
+            'buys': '{}'.format(Account.trades.get('buys')),
+            'sells': '{}'.format(Account.trades.get('sells')),
+            'total trades': '{}'.format(total_trades),
+            'mean trade size': '${} USD'.format(mean_trade_size),
+            'total trading volume, USD': f'{mean_trade_size * total_trades:,}',
+            'estimate trading fee total': f'${fee_total:,}',
+            'trading fee as % of profit': '{}%'.format(round((fee_total * 100)/profit), 2),
             'annualized returns': '{}%'.format(round(annualized_return, 2)),
             'average {} return'.
             format(settings.CURRENT_PERIOD_SETTING): '{}%'.
