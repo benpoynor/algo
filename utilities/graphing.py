@@ -25,8 +25,8 @@ def populate_infobox(ax, display_dict, size=1):
             fontsize=font * 2,
             family='monospace')
     for i, (k, v) in enumerate(display_dict.items()):
-        ax.text(.5, .9 - (i * step), '{}: {}'.format(k, v),
-                horizontalalignment='center',
+        ax.text(.1, .9 - (i * step), '{}: {}'.format(k, v),
+                horizontalalignment='left',
                 transform=ax.transAxes,
                 bbox=dict(facecolor='white', alpha=0.6),
                 fontsize=font,

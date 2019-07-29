@@ -107,6 +107,10 @@ class ExecutionModel:
             ))
 
     @staticmethod
+    def transaction_cost(signal: signal_tuple) -> float:
+        return (signal.price * signal.quantity) * settings.FEE_SCHEDULE
+
+    @staticmethod
     def limit_buy(price, currency, time_limit):
         pass
 
@@ -122,6 +126,7 @@ class ExecutionModel:
             ExecutionModel.debug(signal)
         Account.holdings[signal.currency] = q1 + q2
         Account.cash -= q2 * signal.price
+        Account.cash -= ExecutionModel.transaction_cost(signal)
         Account.trades.update({'buys': Account.trades.get('buys') + 1})
 
     @staticmethod
@@ -133,6 +138,7 @@ class ExecutionModel:
             ExecutionModel.debug(signal)
         Account.holdings[signal.currency] = q1 - tq
         Account.cash += tq * signal.price
+        Account.cash -= ExecutionModel.transaction_cost(signal)
         if q1 > 0:
             Account.trades.update({'sells': Account.trades.get('sells') + 1})
 
@@ -144,6 +150,7 @@ class ExecutionModel:
                 ExecutionModel.debug(signal)
             Account.holdings[signal.currency] = 0
             Account.cash += q1 * signal.price
+            Account.cash -= ExecutionModel.transaction_cost(signal)
             Account.trades.update({'sells': Account.trades.get('sells') + 1})
 
 
