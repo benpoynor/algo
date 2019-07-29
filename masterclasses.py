@@ -33,6 +33,7 @@ class Account:
     market_values = {}
 
     def __init__(self):
+        self.reset()
         self.initial_capital = settings.STARTING_CAPITAL
         Account.equity = self.initial_capital
         Account.cash = Account.equity
@@ -40,6 +41,14 @@ class Account:
         for c in settings.BACKTEST_CURRENCIES:
             Account.holdings.update({c: 0})
             Account.market_values.update({c: 0})
+
+    @staticmethod
+    def reset():
+        Account.equity = 0
+        Account.cash = 0
+        Account.trades = {'buys': 0, 'sells': 0}
+        Account.holdings = {}
+        Account.market_values = {}
 
     @staticmethod
     def update_market_value(signal):
@@ -284,6 +293,7 @@ class BacktestModel:
         fee_total = round((mean_trade_size * total_trades) * settings.FEE_SCHEDULE, 2)
 
         backtest_stats = {
+            'Algorithm': '{}'.format(self.algorithm.__str__()),
             'period type': '{}'.format(settings.CURRENT_PERIOD_SETTING),
             'initial equity': '${}'.format(gd.equity_history[0]),
             'profit': '${}'.format(round(profit, 2)),

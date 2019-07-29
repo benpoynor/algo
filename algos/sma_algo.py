@@ -7,6 +7,9 @@ class MovingAverageAlgo(Algorithm):
         for c in bc:
             self.positions.update({c: False})
 
+    def __str__(self):
+        return 'Moving Average Algorithm'
+
     def backtest_action(self, short_sma, long_sma, currency):
         if short_sma > long_sma:
             if not self.positions.get(currency):
