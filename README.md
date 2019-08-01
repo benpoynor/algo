@@ -17,19 +17,3 @@ Algorithmic Cryptocurrency Trading
 
 #### live: 
 * actually runs the algorithm in real time  
-
-#### future plans
-- multithreading algorithm instances, multiple live algos trading at once
-- website where I can monitor trades and trade history
-- running on AWS near binance exchange servers
-
-#### deps:
-mpl_finance
-https://github.com/matplotlib/mpl_finance
-
-yahoofinancials
-https://github.com/JECSand/yahoofinancials
-
-#### Api stuff:
-binance API docs:
-https://github.com/binance-exchange/binance-official-api-docs
