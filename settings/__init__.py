@@ -2,9 +2,12 @@
 # basically all constants will be defined in this settings.py file
 
 MKT_DATA_BASICS = ['open', 'low', 'close', 'high', 'volume']
-BACKTEST_CURRENCIES = ['ETH-USD', 'BTC-USD', 'LTC-USD', 'ZEC-USD']
+# BACKTEST_CURRENCIES = ['ETH-USD', 'BTC-USD', 'LTC-USD', 'ZEC-USD']
 
-PERIODS = ['weekly', 'daily', 'minute']
+BACKTEST_CURRENCIES = ['ETH-USD']
+
+PERIODS = ['weekly', 'daily', '1min']
+DATA_PATH = '/home/benjamin/Projects/raw_data/'
 BATCH_TEST_MODE = False
 MINUTE_PERIODS_PER_YEAR = 525600
 DAILY_PERIODS_PER_YEAR = 365
@@ -13,7 +16,7 @@ RISK_FREE_RATE = .0187  # U.S. Two Year Yield
 STARTING_CAPITAL = 5000
 FEE_SCHEDULE = .0035
 
-CURRENT_PERIOD_SETTING = PERIODS[1]
+CURRENT_PERIOD_SETTING = PERIODS[2]
 CPY = DAILY_PERIODS_PER_YEAR
 LONG_SMA_PERIOD = 15
 SHORT_SMA_PERIOD = 7

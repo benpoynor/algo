@@ -1,5 +1,7 @@
 import csv
 import pandas as pd
+import settings
+import os
 
 
 class FileHandler:
@@ -13,6 +15,7 @@ class FileHandler:
 
     @staticmethod
     def read_from_file(path):
+        # DEPRECIATED
         with open(path) as csvfile:
             datareader = csv.DictReader(csvfile)
             csvdata = []
@@ -22,7 +25,15 @@ class FileHandler:
             return csvdata
 
     @staticmethod
-    def pandas_read_from_file(path):
+    def pandas_read_from_file(currency: str = None) -> pd.DataFrame:
+        prefix = ''
+        if settings.CURRENT_PERIOD_SETTING == 'daily':
+            prefix = 'data/'  # DEPRECIATE IN FUTURE!
+        elif settings.CURRENT_PERIOD_SETTING == '1min':
+            prefix = settings.DATA_PATH
+        path = '{}{}_{}'.format(prefix, currency.replace('-', '_'), settings.CURRENT_PERIOD_SETTING)
+        if not os.path.isfile(path):
+            path += '.csv'
         return pd.read_csv(path)
 
     @staticmethod

@@ -225,7 +225,8 @@ class BacktestModel:
         data = None
 
         for c in currencies:
-            data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(c)))
+            # data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(c)))
+            data = FileHandler.pandas_read_from_file(c)
             data_dict.update({c: data})
             sig_dict.update({c: []})
 
