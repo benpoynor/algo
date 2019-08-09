@@ -2,6 +2,8 @@ import csv
 import pandas as pd
 import settings
 import os
+import csv
+import itertools
 
 
 class FileHandler:
@@ -25,15 +27,16 @@ class FileHandler:
             return csvdata
 
     @staticmethod
+    def lower_first(iterator):
+        return itertools.chain([next(iterator).lower()], iterator)
+
+    @staticmethod
     def pandas_read_from_file(currency: str = None) -> pd.DataFrame:
-        prefix = ''
-        if settings.CURRENT_PERIOD_SETTING == 'daily':
-            prefix = 'data/'  # DEPRECIATE IN FUTURE!
-        elif settings.CURRENT_PERIOD_SETTING == '1min':
-            prefix = settings.DATA_PATH
+        prefix = settings.DATA_PATH
         path = '{}{}_{}'.format(prefix, currency.replace('-', '_'), settings.CURRENT_PERIOD_SETTING)
         if not os.path.isfile(path):
             path += '.csv'
+
         return pd.read_csv(path)
 
     @staticmethod
