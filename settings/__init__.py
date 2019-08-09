@@ -4,10 +4,10 @@
 MKT_DATA_BASICS = ['open', 'low', 'close', 'high', 'volume']
 # BACKTEST_CURRENCIES = ['ETH-USD', 'BTC-USD', 'LTC-USD', 'ZEC-USD']
 
-BACKTEST_CURRENCIES = ['ETH-USD']
+BACKTEST_CURRENCIES = ['BTC-USD', 'ETH-USD', 'ZEC-USD', 'LTC-USD']
 
 PERIODS = ['weekly', 'daily', '1min']
-DATA_PATH = '/home/benjamin/Projects/raw_data/'
+DATA_PATH = '/home/benjamin/Projects/algo/data/'
 BATCH_TEST_MODE = False
 MINUTE_PERIODS_PER_YEAR = 525600
 DAILY_PERIODS_PER_YEAR = 365

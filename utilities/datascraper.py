@@ -14,8 +14,8 @@ class DataScraper:
     @staticmethod
     def create_data():
         for currency in UNIVERSE:
-            filestring = FileHandler.get_filestring(currency)
-            data = DataScraper.get_yahoo_pricehist(currency, '2017-01-01', '2019-06-15')
+            filestring = FileHandler.get_filestring(currency) + '.csv'
+            data = DataScraper.get_yahoo_pricehist(currency, '2018-01-01', '2019-08-08')
             FileHandler.write_to_file(filestring, data)
             size = os.path.getsize(filestring) / 1000
             printstring = 'file written : {}, ({} kb)'.format(filestring, size)

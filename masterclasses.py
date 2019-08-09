@@ -222,7 +222,6 @@ class BacktestModel:
         data_dict = {}
         sig_dict = {}
         equity_history = []
-        data = None
 
         for c in currencies:
             # data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(c)))
@@ -230,8 +229,10 @@ class BacktestModel:
             data_dict.update({c: data})
             sig_dict.update({c: []})
 
+        smallest_set = min(len(v) for v in data_dict.values())
+
         print('generating backtest values...')
-        for idx in tqdm(range(len(data))):
+        for idx in tqdm(range(smallest_set)):
             for c in currencies:
                 short_sma_series = Technicals.pandas_sma(settings.SHORT_SMA_PERIOD, data_dict[c])
                 long_sma_series = Technicals.pandas_sma(settings.LONG_SMA_PERIOD, data_dict[c])

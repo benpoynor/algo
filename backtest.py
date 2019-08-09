@@ -9,4 +9,4 @@ execution_model = ExecutionModel()
 algorithm = MovingAverageAlgo(bc=BC)
 backtest_model = BacktestModel(algorithm=algorithm)
 
-backtest_model.visualize_backtest('ETH-USD')
+backtest_model.visualize_backtest(BC[0])

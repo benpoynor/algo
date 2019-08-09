@@ -1,4 +1,3 @@
-import csv
 import pandas as pd
 import settings
 import os
@@ -33,10 +32,8 @@ class FileHandler:
     @staticmethod
     def pandas_read_from_file(currency: str = None) -> pd.DataFrame:
         prefix = settings.DATA_PATH
-        path = '{}{}_{}'.format(prefix, currency.replace('-', '_'), settings.CURRENT_PERIOD_SETTING)
-        if not os.path.isfile(path):
-            path += '.csv'
-
+        path = '{}{}_{}.csv'.format(
+            prefix, currency.replace('-', '_'), settings.CURRENT_PERIOD_SETTING)
         return pd.read_csv(path)
 
     @staticmethod
