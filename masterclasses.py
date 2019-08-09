@@ -5,6 +5,7 @@ import typing
 from dataclasses import dataclass
 from tqdm import tqdm
 import statistics
+import pprint
 
 '''
 Declaring Global Scope Data Types (really just named tuples),
@@ -328,3 +329,8 @@ class BacktestModel:
         bs = self.calc_backtest(gd)
 
         moving_average_full_graph(currency, bs)
+
+    def print_backtest(self):
+        gd = self.gen_backtest(settings.BACKTEST_CURRENCIES)
+        bs = self.calc_backtest(gd)
+        pprint.pprint(bs.backtest_stats)
