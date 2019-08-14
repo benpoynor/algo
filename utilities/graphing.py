@@ -25,12 +25,27 @@ def populate_infobox(ax, display_dict, size=1):
             fontsize=font * 2,
             family='monospace')
     for i, (k, v) in enumerate(display_dict.items()):
-        ax.text(.1, .9 - (i * step), '{}: {}'.format(k, v),
-                horizontalalignment='left',
-                transform=ax.transAxes,
-                bbox=dict(facecolor='white', alpha=0.6),
-                fontsize=font,
-                family='serif')
+        if k is 'universe':
+            ax.text(.81, .9, '{}:'.format(k),
+                    horizontalalignment='left',
+                    transform=ax.transAxes,
+                    bbox=dict(facecolor='white', alpha=0.6),
+                    fontsize=font,
+                    family='serif')
+            for idx, v2 in enumerate(v):
+                ax.text(.81, .9 - ((idx + 1) * step), '{}'.format(v2),
+                        horizontalalignment='left',
+                        transform=ax.transAxes,
+                        bbox=dict(facecolor='white', alpha=0.6),
+                        fontsize=font,
+                        family='serif')
+        else:
+            ax.text(.1, .9 - (i * step), '{}: {}'.format(k, v),
+                    horizontalalignment='left',
+                    transform=ax.transAxes,
+                    bbox=dict(facecolor='white', alpha=0.6),
+                    fontsize=font,
+                    family='serif')
 
 
 def moving_average_full_graph(default_currency: str, bs):

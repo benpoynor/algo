@@ -15,7 +15,8 @@ but here in python, we don't really have a 'typedef' equivalent
 signal_tuple = typing.NamedTuple('signal_2', [('action', str), ('signal_str', float), ('currency', str),
                                  ('price', float), ('quantity', float), ('liquidate', bool)])
 
-generated_data = typing.NamedTuple('rdata', [('price_data', dict), ('equity_history', list), ('signal_data', dict)])
+generated_data = typing.NamedTuple('rdata', [
+    ('price_data', dict), ('equity_history', list), ('signal_data', dict), ('universe', list)])
 
 
 class Account:
@@ -268,11 +269,11 @@ class BacktestModel:
 
         return generated_data(price_data=data_dict,
                               equity_history=equity_history,
-                              signal_data=sig_dict)
+                              signal_data=sig_dict,
+                              universe=universe)
 
     def calc_backtest(self, gd: generated_data) -> BacktestStats:
         dd_stats = Technicals.calc_drawdown(gd.equity_history)
-
         profit = gd.equity_history[-1] - gd.equity_history[0]
         returns = 100 * (profit / gd.equity_history[0])
 
@@ -317,6 +318,7 @@ class BacktestModel:
             'longest drawdown': '{} candles'.format(dd_stats['drawdown_length']),
             'gmax_idx': dd_stats['gmax_idx'],
             'gmin_idx': dd_stats['gmin_idx'],
+            'universe': gd.universe
         }
         return self.BacktestStats(price_data=gd.price_data,
                                   signal_data=gd.signal_data,
