@@ -229,7 +229,7 @@ class BacktestModel:
             data = FileHandler.pandas_read_from_file(c)
             data_dict.update({c: data})
             sig_dict.update({c: []})
-
+            del data
         smallest_set = min(len(v) for v in data_dict.values())
 
         print('generating backtest values...')
