@@ -30,10 +30,10 @@ class FileHandler:
         return itertools.chain([next(iterator).lower()], iterator)
 
     @staticmethod
-    def pandas_read_from_file(currency: str = None) -> pd.DataFrame:
+    def pandas_read_from_file(timeframe: str, currency: str) -> pd.DataFrame:
         prefix = settings.DATA_PATH
         path = '{}{}_{}.csv'.format(
-            prefix, currency.replace('-', '_'), settings.CURRENT_PERIOD_SETTING)
+            prefix, currency.replace('-', '_'), timeframe)
         return pd.read_csv(path)
 
     @staticmethod

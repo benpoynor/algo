@@ -15,11 +15,12 @@ def main(**kwargs):
         Account(), RiskModel(), ExecutionModel()
         algorithm = MovingAverageAlgo(bc=currencies)
         backtest_model = BacktestModel(algorithm=algorithm)
+        tf = kwargs.get('tf')[0] if isinstance(kwargs.get('tf'), list) else kwargs.get('tf')
 
         if not kwargs.get('no_gui'):
-            backtest_model.visualize_backtest(currencies[0])
+            backtest_model.visualize_backtest(currencies[0], tf)
         else:
-            backtest_model.print_backtest()
+            backtest_model.print_backtest(tf)
 
     def test():
         print('running tests...')
@@ -42,8 +43,11 @@ if __name__ == '__main__':
     parser.add_argument("-sc", type=str, nargs=1,
                         required=False, help="isolate one currency for backtest")
 
-    parser.add_argument('runtime', metavar='T', type=str, nargs=1,
+    parser.add_argument('runtime', metavar='Runtime', type=str, nargs=1,
                         help='backtest, test, livedemo, production')
+
+    parser.add_argument('-tf', type=str, nargs=1,
+                        required=False, help='[\'weekly\', \'daily\', \'1min\']', default='daily')
     namespace = vars(parser.parse_args())
 
     main(**namespace)

@@ -218,7 +218,7 @@ class BacktestModel:
             return 0
         return (current_price - last_entry_price) / last_entry_price
 
-    def gen_backtest(self, universe: list) -> generated_data:
+    def gen_backtest(self, universe: list, timeframe: str) -> generated_data:
 
         currencies = universe
         data_dict = {}
@@ -227,7 +227,7 @@ class BacktestModel:
 
         for c in currencies:
             # data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(c)))
-            data = FileHandler.pandas_read_from_file(c)
+            data = FileHandler.pandas_read_from_file(timeframe=timeframe, currency=c)
             data_dict.update({c: data})
             sig_dict.update({c: []})
             del data
@@ -325,14 +325,14 @@ class BacktestModel:
                                   equity_history=pd.DataFrame(gd.equity_history),
                                   backtest_stats=backtest_stats)
 
-    def visualize_backtest(self, currency):
+    def visualize_backtest(self, currency: str, timeframe: str):
 
-        gd = self.gen_backtest(settings.BACKTEST_CURRENCIES)
+        gd = self.gen_backtest(universe=settings.BACKTEST_CURRENCIES, timeframe=timeframe)
         bs = self.calc_backtest(gd)
 
         moving_average_full_graph(currency, bs)
 
-    def print_backtest(self):
-        gd = self.gen_backtest(settings.BACKTEST_CURRENCIES)
+    def print_backtest(self, timeframe: str):
+        gd = self.gen_backtest(settings.BACKTEST_CURRENCIES, timeframe=timeframe)
         bs = self.calc_backtest(gd)
         pprint.pprint(bs.backtest_stats)
