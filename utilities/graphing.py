@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_finance import candlestick2_ochl
 from utilities.technicals import Technicals
+from utilities.filehandler import FileHandler
 import numpy as np
 import settings
 

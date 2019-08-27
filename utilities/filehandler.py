@@ -1,6 +1,5 @@
 import pandas as pd
 import settings
-import os
 import csv
 import itertools
 
@@ -31,10 +30,13 @@ class FileHandler:
 
     @staticmethod
     def pandas_read_from_file(timeframe: str, currency: str) -> pd.DataFrame:
+        r = range(200, 400)
         prefix = settings.DATA_PATH
         path = '{}{}_{}.csv'.format(
             prefix, currency.replace('-', '_'), timeframe)
-        return pd.read_csv(path)
+        df = pd.read_csv(path)
+        df_cropped = df.drop(df.index[:r[0]]).drop(df.index[r[-1]:])
+        return df_cropped.reset_index(drop=True)
 
     @staticmethod
     def get_filestring(currency_str):
