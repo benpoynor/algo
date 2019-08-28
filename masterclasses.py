@@ -225,14 +225,12 @@ class BacktestModel:
         sig_dict = {}
         equity_history = []
 
-        start = 100
-        stop = 400
-        smallest_set = min(list(len(FileHandler.pandas_read_from_file(timeframe, c)) for c in currencies))
-        d_range = range(start, min(stop, smallest_set))
+        smallest_set = \
+            min(list(len(FileHandler.pandas_read_from_file(timeframe, c, points=200)) for c in currencies))
 
         for c in currencies:
             # data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(c)))
-            data = FileHandler.pandas_read_from_file(timeframe=timeframe, currency=c)
+            data = FileHandler.pandas_read_from_file(timeframe=timeframe, currency=c, points=200)
             data_dict.update({c: data})
             sig_dict.update({c: []})
             del data

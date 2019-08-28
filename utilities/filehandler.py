@@ -29,14 +29,13 @@ class FileHandler:
         return itertools.chain([next(iterator).lower()], iterator)
 
     @staticmethod
-    def pandas_read_from_file(timeframe: str, currency: str) -> pd.DataFrame:
-        r = range(200, 400)
+    def pandas_read_from_file(timeframe: str, currency: str, points: int = 0) -> pd.DataFrame:
         prefix = settings.DATA_PATH
         path = '{}{}_{}.csv'.format(
             prefix, currency.replace('-', '_'), timeframe)
         df = pd.read_csv(path)
-        df_cropped = df.drop(df.index[:r[0]]).drop(df.index[r[-1]:])
-        return df_cropped.reset_index(drop=True)
+        df = df.drop(df.index[:len(df) - points])
+        return df.reset_index(drop=True)
 
     @staticmethod
     def get_filestring(currency_str):
