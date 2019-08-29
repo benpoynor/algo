@@ -34,7 +34,8 @@ class FileHandler:
         path = '{}{}_{}.csv'.format(
             prefix, currency.replace('-', '_'), timeframe)
         df = pd.read_csv(path)
-        df = df.drop(df.index[:len(df) - points])
+        if points:
+            df = df.drop(df.index[:len(df) - points])
         return df.reset_index(drop=True)
 
     @staticmethod

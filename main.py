@@ -15,12 +15,17 @@ def main(**kwargs):
         Account(), RiskModel(), ExecutionModel()
         algorithm = MovingAverageAlgo(bc=currencies)
         backtest_model = BacktestModel(algorithm=algorithm)
-        tf = kwargs.get('tf')[0] if isinstance(kwargs.get('tf'), list) else kwargs.get('tf')
+
+        def get_kwarg(name: str) -> str:
+            return kwargs.get(name)[0] if isinstance(kwargs.get(name), list) else kwargs.get(name)
+
+        tf = get_kwarg('tf')
+        points = get_kwarg('pts') if get_kwarg('pts') else 0
 
         if not kwargs.get('no_gui'):
-            backtest_model.visualize_backtest(currencies[0], tf)
+            backtest_model.visualize_backtest(currencies[0], tf, points=points)
         else:
-            backtest_model.print_backtest(tf)
+            backtest_model.print_backtest(tf, points=points)
 
     def test():
         print('running tests...')
@@ -48,6 +53,10 @@ if __name__ == '__main__':
 
     parser.add_argument('-tf', type=str, nargs=1,
                         required=False, help='[\'weekly\', \'daily\', \'1min\']', default='daily')
+
+    parser.add_argument("-pts", type=int, nargs=1, required=False, default=0,
+                        help="Integer amount of points to backtest"
+                             " (trims from front of data for relevancy)")
     namespace = vars(parser.parse_args())
 
     main(**namespace)

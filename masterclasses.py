@@ -218,25 +218,25 @@ class BacktestModel:
             return 0
         return (current_price - last_entry_price) / last_entry_price
 
-    def gen_backtest(self, universe: list, timeframe: str) -> generated_data:
+    def gen_backtest(self, universe: list, timeframe: str, points: int = 0) -> generated_data:
 
         currencies = universe
         data_dict = {}
         sig_dict = {}
         equity_history = []
-
         smallest_set = \
-            min(list(len(FileHandler.pandas_read_from_file(timeframe, c, points=200)) for c in currencies))
+            min(list(len(FileHandler.pandas_read_from_file(timeframe, c)) for c in currencies))
+        cutoff = points if points else smallest_set
 
         for c in currencies:
             # data = pd.DataFrame(FileHandler.read_from_file(FileHandler.get_filestring(c)))
-            data = FileHandler.pandas_read_from_file(timeframe=timeframe, currency=c, points=200)
+            data = FileHandler.pandas_read_from_file(timeframe=timeframe, currency=c, points=cutoff)
             data_dict.update({c: data})
             sig_dict.update({c: []})
             del data
 
         print('generating backtest values...')
-        for idx in tqdm(range(smallest_set)):
+        for idx in tqdm(range(cutoff)):
             for c in currencies:
                 short_sma_series = Technicals.pandas_sma(settings.SHORT_SMA_PERIOD, data_dict[c])
                 long_sma_series = Technicals.pandas_sma(settings.LONG_SMA_PERIOD, data_dict[c])
@@ -327,14 +327,18 @@ class BacktestModel:
                                   equity_history=pd.DataFrame(gd.equity_history),
                                   backtest_stats=backtest_stats)
 
-    def visualize_backtest(self, currency: str, timeframe: str):
+    def visualize_backtest(self, currency: str, timeframe: str, points: int):
 
-        gd = self.gen_backtest(universe=settings.BACKTEST_CURRENCIES, timeframe=timeframe)
+        gd = self.gen_backtest(universe=settings.BACKTEST_CURRENCIES,
+                               timeframe=timeframe,
+                               points=points)
         bs = self.calc_backtest(gd)
 
         moving_average_full_graph(currency, bs)
 
-    def print_backtest(self, timeframe: str):
-        gd = self.gen_backtest(settings.BACKTEST_CURRENCIES, timeframe=timeframe)
+    def print_backtest(self, timeframe: str, points: int):
+        gd = self.gen_backtest(settings.BACKTEST_CURRENCIES,
+                               timeframe=timeframe,
+                               points=points)
         bs = self.calc_backtest(gd)
         pprint.pprint(bs.backtest_stats)
