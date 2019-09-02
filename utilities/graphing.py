@@ -64,6 +64,13 @@ def moving_average_full_graph(default_currency: str, bs):
     x_range = np.arange(len(dataset))
     gridsize = (8, 8)
 
+    d = {'OPEN_KEY': FileHandler.get_header('open', dataset),
+         'CLOSE_KEY': FileHandler.get_header('close', dataset),
+         'LOW_KEY': FileHandler.get_header('low', dataset),
+         'HIGH_KEY': FileHandler.get_header('high', dataset)}
+
+    # list(map(exec, ("{0}=\"{1}\"".format(x[0], FileHandler.get_header(x[1], dataset)) for x in d.items())))
+
     # declare axes
     ax1 = plt.subplot2grid(gridsize, (0, 0), colspan=6, rowspan=4)
     ax2 = plt.subplot2grid(gridsize, (4, 0), colspan=6, rowspan=1, sharex=ax1)
@@ -80,8 +87,8 @@ def moving_average_full_graph(default_currency: str, bs):
     sma_delta_dydx = Technicals.calc_derivative(sma_delta)
 
     # first box
-    candlestick2_ochl(ax=ax1, opens=dataset['open'], closes=dataset['close'],
-                      highs=dataset['high'], lows=dataset['low'],
+    candlestick2_ochl(ax=ax1, opens=dataset[d['OPEN_KEY']], closes=dataset[d['CLOSE_KEY']],
+                      highs=dataset[d['HIGH_KEY']], lows=dataset[d['LOW_KEY']],
                       width=1, alpha=1, colorup='green', colordown='red', )
 
     sma_short.plot(ax=ax1, color='blue')

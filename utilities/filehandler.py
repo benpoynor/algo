@@ -39,5 +39,14 @@ class FileHandler:
         return df.reset_index(drop=True)
 
     @staticmethod
-    def get_filestring(currency_str):
+    def get_filestring(currency_str: str) -> str:
         return 'data/{}_daily'.format(currency_str.replace('-', '_'))
+
+    @staticmethod
+    def get_header(kw: str, data: pd.DataFrame) -> str:
+        data = data.head().to_dict()
+        formats = [kw[0].upper() + kw[1:], kw.upper(), kw.lower()]
+        for f in formats:
+            if f in data.keys():
+                return f
+        raise KeyError
