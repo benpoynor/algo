@@ -1,16 +1,32 @@
-from masterclasses import Algorithm
+import pandas as pd
+from utilities.technicals import Technicals
+import settings
 
 
-class MovingAverageAlgo(Algorithm):
-    def __init__(self, bc):
+class MovingAverageAlgo:
+    def __init__(self, data: dict):
+        bc = settings.BACKTEST_CURRENCIES
         self.positions = {}
+        self.sma_series_long = {}  # dict of pd.Series
+        self.sma_series_short = {}  # dict of pd.Series
+
         for c in bc:
+            self.sma_series_short.update({c: Technicals.pandas_sma(settings.SHORT_SMA_PERIOD, data[c])})
+            self.sma_series_long.update({c: Technicals.pandas_sma(settings.LONG_SMA_PERIOD, data[c])})
             self.positions.update({c: False})
 
-    def __str__(self):
-        return 'Moving Average Algorithm'
+    def get_long_sma(self, c: str, idx: int) -> pd.Series:
+        return self.sma_series_long[c][idx]
 
-    def backtest_action(self, short_sma, long_sma, currency):
+    def get_short_sma(self, c: str, idx: int) -> pd.Series:
+        return self.sma_series_short[c][idx]
+
+    def __str__(self):
+        return 'Moving Average Algorithm V2'
+
+    def backtest_action(self, currency: str, idx: int) -> dict:
+        short_sma = self.get_short_sma(currency, idx)
+        long_sma = self.get_long_sma(currency, idx)
         if short_sma > long_sma:
             if not self.positions.get(currency):
                 # price = float(data[index].get('close'))

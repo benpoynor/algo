@@ -7,7 +7,9 @@ import unittest
 def get_stats() -> dict:
     Account().__init__()
     RiskModel().__init__()
-    algorithm = MovingAverageAlgo(bc=settings.BACKTEST_CURRENCIES)
+    algorithm = None
+    #TESTS CURRENTLY BROKEN.
+    #TODO: FIX TESTS
     backtest_model = BacktestModel(algorithm=algorithm)
 
     gd = backtest_model.gen_backtest(settings.BACKTEST_CURRENCIES)

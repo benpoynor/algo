@@ -1,4 +1,4 @@
-from algos.sma_algo_v2 import MovingAverageAlgoV2
+from algos.sma_algo import MovingAverageAlgo
 from utilities.graphing import *
 import settings
 import typing
@@ -226,7 +226,7 @@ class BacktestModel:
             sig_dict.update({c: []})
             del data
 
-        self.algorithm = MovingAverageAlgoV2(data=data_dict)
+        self.algorithm = MovingAverageAlgo(data=data_dict)
 
         print('generating backtest values...')
         for idx in tqdm(range(cutoff)):
