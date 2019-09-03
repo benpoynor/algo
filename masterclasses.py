@@ -1,4 +1,4 @@
-from utilities.filehandler import FileHandler
+from algos.sma_algo_v2 import MovingAverageAlgoV2
 from utilities.graphing import *
 import settings
 import typing
@@ -165,15 +165,6 @@ class ExecutionModel:
             Account.trades.update({'sells': Account.trades.get('sells') + 1})
 
 
-class Algorithm:
-    # index here just means date
-    def backtest_action(self, short_sma: int, long_sma: int, currency: str) -> dict:
-        raise NotImplementedError
-
-    def action(self):
-        raise NotImplementedError
-
-
 class BacktestModel:
 
     @dataclass
@@ -194,8 +185,8 @@ class BacktestModel:
         def get_price_dataframe(self, currency: str) -> pd.DataFrame:
             return self.price_data.get(currency)
 
-    def __init__(self, algorithm):
-        self.algorithm = algorithm
+    def __init__(self):
+        self.algorithm = None
 
     @staticmethod
     def execute_signal(signal: signal_tuple):
@@ -235,21 +226,17 @@ class BacktestModel:
             sig_dict.update({c: []})
             del data
 
+        self.algorithm = MovingAverageAlgoV2(data=data_dict)
+
         print('generating backtest values...')
         for idx in tqdm(range(cutoff)):
             for c in currencies:
-                short_sma_series = Technicals.pandas_sma(settings.SHORT_SMA_PERIOD, data_dict[c])
-                long_sma_series = Technicals.pandas_sma(settings.LONG_SMA_PERIOD, data_dict[c])
-                sma20 = float(short_sma_series[idx])
-                sma50 = float(long_sma_series[idx])
                 price = float(data_dict[c].at[idx, 'close'])
                 last_entry_price = self.get_last_entry_price(sig_dict[c])
                 profit_loss = self.get_profit_loss(last_entry_price=last_entry_price,
                                                    current_price=price)
 
-                response = self.algorithm.backtest_action(short_sma=sma20,
-                                                          long_sma=sma50,
-                                                          currency=c)
+                response = self.algorithm.backtest_action(currency=c, idx=idx)
 
                 q = RiskModel.get_position_size(signal_strength=response['signal_str'],
                                                 action=response['action'],

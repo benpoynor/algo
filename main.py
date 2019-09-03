@@ -1,4 +1,3 @@
-from algos.sma_algo import MovingAverageAlgo
 from masterclasses import RiskModel, ExecutionModel, Account, BacktestModel
 from settings import BACKTEST_CURRENCIES as BC
 import argparse
@@ -13,8 +12,7 @@ def main(**kwargs):
             currencies = currencies.pop(currencies.index(kwargs.get('sc')[0]))
 
         Account(), RiskModel(), ExecutionModel()
-        algorithm = MovingAverageAlgo(bc=currencies)
-        backtest_model = BacktestModel(algorithm=algorithm)
+        backtest_model = BacktestModel()
 
         def get_kwarg(name: str) -> str:
             return kwargs.get(name)[0] if isinstance(kwargs.get(name), list) else kwargs.get(name)
