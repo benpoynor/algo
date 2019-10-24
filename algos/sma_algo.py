@@ -25,6 +25,11 @@ class MovingAverageAlgo:
         return 'Moving Average Algorithm V2'
 
     def backtest_action(self, currency: str, idx: int) -> dict:
+        # write production environment before doing any work on the algo
+        # because the code should be convertable 100% verbatim
+        # if the code isn't convertable, the algorithm could be different
+        # in some small but important way in production vs in backtest.
+
         short_sma = self.get_short_sma(currency, idx)
         long_sma = self.get_long_sma(currency, idx)
         if short_sma > long_sma:

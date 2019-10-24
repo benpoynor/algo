@@ -18,7 +18,7 @@ class LiveDemo:
         # run with an algo
         pass
 
-    
+
 class Production:
     def __init__(self):
         self.api_public_key = None
