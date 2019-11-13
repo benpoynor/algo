@@ -2,6 +2,7 @@ from masterclasses import RiskModel, ExecutionModel, Account, BacktestModel
 from settings import BACKTEST_CURRENCIES as BC
 import argparse
 import os
+from prod import LiveDemo, Production
 
 # TODO: ACTUALLY MAKE A GUI AT THE BEGINNING THAT THE BACKTEST IS RUN FROM!
 # MAKES THIS SHIT LOOKS 1000X LESS FUCKING TERRIBLE THAN IT CURRENTLY DOES
@@ -40,7 +41,8 @@ def main(**kwargs):
         os.system('python -m unittest discover')
 
     def livedemo():
-        print('not implemented yet')
+        ld = LiveDemo()
+        ld.test_run()
 
     def production():
         print('not implemented yet')
