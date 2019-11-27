@@ -6,3 +6,4 @@ pandas==0.24.2
 pprint==0.1
 tqdm==4.32.2
 yahoofinancials==1.5
+requests==2.22.0

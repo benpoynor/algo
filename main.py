@@ -41,8 +41,7 @@ def main(**kwargs):
         os.system('python -m unittest discover')
 
     def livedemo():
-        ld = LiveDemo()
-        ld.test_run()
+        LiveDemo.run()
 
     def production():
         print('not implemented yet')
