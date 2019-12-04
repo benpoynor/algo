@@ -2,9 +2,9 @@ import pandas as pd
 from utilities.technicals import Technicals
 import settings
 
-# description: go long on sma(a) > sma(b) crossover
-#              sell on sma(a) < sma(b) crossover where a exceeds b
-#              the absolute and relative scales of a and b are variable
+
+# description: long on dydx[sma(a) - sma(b)] > 0 where a > b
+#              sell conditions and a & b sizing are variable
 
 
 class MovingAverageAlgo:

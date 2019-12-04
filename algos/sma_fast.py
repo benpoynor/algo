@@ -2,9 +2,8 @@ import pandas as pd
 from utilities.technicals import Technicals
 import settings
 
-# description: go long on sma(a) > sma(b) crossover
-#              sell on sma(a) < sma(b) crossover where a exceeds b
-#              the absolute and relative scales of a and b are variable
+# description: go long on sma(short) > sma(long) crossover
+#              sell after n candles or p profit. n & p variable
 
 
 class MovingAverageAlgo:
