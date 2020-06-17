@@ -4,7 +4,9 @@ import settings
 
 
 # description: long on dydx[sma(a) - sma(b)] > 0 where a > b
-#              sell conditions and a & b sizing are variable
+#                   && [sma(a) - sma(b)] > n
+#                   && (price decline / beta) > 5% from time c to d
+#              sell conditions and a, b, n are variable
 
 
 class MovingAverageAlgo:

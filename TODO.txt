@@ -1,3 +1,0 @@
-- add a net exposure statistic on the graph
-- figure out why my net equity is fluctuating
-    when my net exposure should be 0...

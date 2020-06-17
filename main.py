@@ -4,18 +4,9 @@ import argparse
 import os
 from prod import LiveDemo, Production
 
-# TODO: ACTUALLY MAKE A GUI AT THE BEGINNING THAT THE BACKTEST IS RUN FROM!
-# MAKES THIS SHIT LOOKS 1000X LESS FUCKING TERRIBLE THAN IT CURRENTLY DOES
-
 
 def main(**kwargs):
     def backtest():
-
-        # < eval(kwargs['runtime'][0] + '()') >
-        # is run at the bottom, which is why it looks like backtest is never getting called
-        # in actuality, the user-inputted string literal after main dictates...
-        # the function that gets called here.
-        # can it be written better? yes. Is it a priority? No.
 
         currencies = BC
         if kwargs.get('sc'):
