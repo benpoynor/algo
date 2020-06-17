@@ -1,5 +1,5 @@
-Algorithmic Cryptocurrency Trading
-========
+ALGO:
+
 
 Old project, accrued too much technical debt to continue to scale and add features without hacky implementation.
 Definitely salvagable with some time, and definitely a good reference for anyone looking to build backtesting software. Bear in mind that this is a model of what not to do as much as it is a model of what to do. I built this over a year ago in my free time and as my first attempt at writing trading software.
