@@ -7,7 +7,7 @@ Definitely salvagable with some time, and definitely a good reference for anyone
 Essentially it runs through a set of price data with a set of instructions on when to buy and sell, trades as if it were real time, and reports the algorithm's statistics via matplotlib visualizations and plaintext statistics. 
 
 
-Structure and Design Philosophy:
+Structure and Design Philosophy: \n
 account: holds account details (balance, keys, etc...)  
 risk model: decides how much to buy (manages risk)  
 execution model: buys  
