@@ -1,5 +1,7 @@
 ALGO:
 
+![demo image](https://github.com/benpoynor/algo/blob/master/demo.png?raw=true)
+
 How to run:
 1. pip install -r requirements.txt (fix any version errors by just installing the package without a version number)
 2. download git LFS
